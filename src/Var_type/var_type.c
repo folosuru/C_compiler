@@ -44,9 +44,14 @@ int calc_var_size(Typename* type) {
     }
 }
 Typename* create_ptr_to(Typename* p) {
+    if (p->point_this_type) {
+        return p->point_this_type;
+    }
     Typename* result = calloc(1, sizeof(Typename));
     result->ptr_to = p;
     result->type = type_ptr;
+    p->point_this_type = result;
+    return result;
 }
 Typename* refer_ptr(Typename* p) {
     return p->ptr_to;

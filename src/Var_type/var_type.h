@@ -1,13 +1,15 @@
 #include <stdbool.h>
 typedef enum {
     type_int,
-    type_ptr
+    type_ptr,
+    type_array
 } typename_type;
 
-typedef struct Typename Typename ;
+typedef struct Typename Typename;
 struct Typename{
     typename_type type;
     Typename* ptr_to;
+    Typename* point_this_type;
 };
 
 typedef struct {
