@@ -134,7 +134,7 @@ redister_word get_args_place_for(int arg_index) {
 }
 
 void print_function_def(function_def* function) {
-    if (!function) {
+    if (!function->program) {
         return;
     }
     printf("%s:\n", str_trim(function->name, function->name_length));

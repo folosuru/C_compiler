@@ -18,12 +18,12 @@ Node* new_node(NodeType type, Node* left, Node* right) {
     node->var_type = get_union_type(left->var_type, right->var_type);
     if (node->var_type->type == type_ptr) {
         if (left->var_type->type != type_ptr) {
-            node->left = type_convention(new_node(NODE_MLU, new_node_num(calc_var_size(node->var_type)), left), node->var_type);
+            node->left = type_convention(new_node(NODE_MLU, new_node_num(calc_var_size(refer_ptr(node->var_type))), left), node->var_type);
             node->right = right;
         }
         if (right->var_type->type != type_ptr) {
             node->left = left;
-            node->right = type_convention(new_node(NODE_MLU, new_node_num(calc_var_size(node->var_type)), right), node->var_type);
+            node->right = type_convention(new_node(NODE_MLU, new_node_num(calc_var_size(refer_ptr(node->var_type))), right), node->var_type);
         }
         if (right->var_type->type == left->var_type->type && right->var_type->type == type_ptr) {
             node->left = left;
