@@ -6,7 +6,7 @@ int func(int a, int b) {
 }
 
 int print_num(int a) {
-    printf("あ%d\n",a);
+    printf("%d\n",a);
     return 0;
 }
 

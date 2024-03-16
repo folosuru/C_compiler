@@ -4,5 +4,6 @@ cmake-build-*
 .idea
 *.o
 *.s
+*.a
 *.exe
 .vscode
