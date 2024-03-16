@@ -1,0 +1,1 @@
+char* str_trim(char*, int);
