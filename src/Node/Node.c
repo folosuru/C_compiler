@@ -98,26 +98,42 @@ function_def* getFunction() {
     working_function->name_length = name->length;
     consume_operator("(");
     int args_cnt = 0;
+    bool arg_empty_flag = false;
+    Token* empty_arg = 0;
     while (!consume_operator(")")) {
         Typename* arg_type = consume_typename(0);
         if (!arg_type) {
             error_token(now_token, "need typename");
         }
         Token* arg_name = consume_identify();
-        consume_operator(",");
-        for (List_iter* current = working_function->args_list; current != 0; current = current->prev ) {
-            Args_var* current_var = current->data;
-            if (current_var->len == arg_name->length && !memcmp(current_var->name, arg_name->string, current_var->len)) {
-                error_token(arg_name, "Arg name Duplicate");
+        if (!arg_name) {
+            arg_empty_flag = true;
+            if (!empty_arg) {
+                empty_arg = now_token;
             }
+            createArgsVarOffsaet(0, 0, arg_type, working_function->args_count);
+        } else {
+            for (List_iter* current = working_function->args_list; current != 0; current = current->prev ) {
+                Args_var* current_var = current->data;
+                if (current_var->len == arg_name->length && !memcmp(current_var->name, arg_name->string, current_var->len)) {
+                    error_token(arg_name, "Arg name Duplicate");
+                }
+            }    
+            createArgsVarOffsaet(arg_name->string, arg_name->length, arg_type, working_function->args_count);
         }
         working_function->args_count++;
-        createArgsVarOffsaet(arg_name->string, arg_name->length, arg_type, working_function->args_count);
+        consume_operator(",");
     }
-    consume_operator("{");
-    working_function->program = getProgram();
-    if (working_function->lvar) {
-        Lvar_offset_calc(working_function->lvar->index);
+    if (consume_operator("{")) {
+        if (arg_empty_flag) {
+            error_token(empty_arg, "function impl needs arg name");
+        }
+        working_function->program = getProgram();
+        if (working_function->lvar) {
+            Lvar_offset_calc(working_function->lvar->index);
+        }
+    } else {
+        consume_operator(";");
     }
     add_reverse_array_upd(&found_function)->data = working_function;
     return working_function;

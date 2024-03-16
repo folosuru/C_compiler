@@ -74,4 +74,5 @@ assert 5 'int x=5;int* y = &x; int** z = &y;  return **z;'
 assert_func 5 'int main(){int*** p; return 5;}'
 assert 5 'if (sizeof(5) == 4) {int* p; if (sizeof(p) == 8) {return 5;}} return 0;'
 assert 8 'return sizeof(int*);'
+assert_func 0 'int foo(); int main(){return 0;}'
 echo OK

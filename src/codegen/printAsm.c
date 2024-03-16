@@ -134,6 +134,9 @@ redister_word get_args_place_for(int arg_index) {
 }
 
 void print_function_def(function_def* function) {
+    if (!function) {
+        return;
+    }
     printf("%s:\n", str_trim(function->name, function->name_length));
     print_push_register(rbp);
     printf("  mov rbp, rsp\n");
