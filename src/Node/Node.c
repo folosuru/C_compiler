@@ -607,13 +607,22 @@ int calc_array_first_offset(Typename* var) {
 
 void Lvar_offset_calc(List_index* index) {
     List_iter* cur = index->start;
+    printf("# DEBUG INFO\n");
     while (cur) {
         Local_var* new_var = cur->data;
         if (cur->prev) {
             Local_var* old_var = cur->prev->data;
             new_var->offset = old_var->offset + old_var->size + calc_array_first_offset(new_var->type);
+            printf("# %-7.10s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
+                                        new_var->size,
+                                        new_var->offset - calc_array_first_offset(new_var->type),
+                                        new_var->size + new_var->offset - calc_array_first_offset(new_var->type));
         } else {
             new_var->offset = 8 + calc_array_first_offset(new_var->type);
+            printf("# %-7.20s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
+                                        new_var->size,
+                                        new_var->offset - calc_array_first_offset(new_var->type),
+                                        new_var->offset + new_var->size - calc_array_first_offset(new_var->type));
         }
         cur = cur->next;
     }
