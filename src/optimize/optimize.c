@@ -16,6 +16,12 @@ Node* optimize(Node* node) {
         if (left->type == NODE_NUM && right->type == NODE_NUM) {
             return new_node_num(left->value + right->value);
         }
+        if (left->type == NODE_NUM && left->value == 0) {
+            return right;
+        }
+        if (right->type == NODE_NUM && right->value == 0) {
+            return left;
+        }
     }
     return node;
 }

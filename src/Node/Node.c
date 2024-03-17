@@ -10,6 +10,15 @@ bool at_eof() {
 }
 
 Node* new_node_num(int val);
+Node* new_node_plain(NodeType type, Node* left, Node* right, Typename* var_type) {
+    Node *node = calloc(1, sizeof(Node));
+    node->type = type;
+    node->left = left;
+    node->right = right;
+    node->var_type = var_type;
+    return node;
+}
+
 Node* new_node(NodeType type, Node* left, Node* right) {
     Node *node = calloc(1, sizeof(Node));
     if (is_type_conflict(left->var_type, right->var_type)) {
@@ -25,7 +34,7 @@ Node* new_node(NodeType type, Node* left, Node* right) {
             node->left = left;
             node->right = type_convention(new_node(NODE_MLU, new_node_num(calc_var_size(refer_ptr(node->var_type))), right), node->var_type);
         }
-        if (right->var_type->type == left->var_type->type && right->var_type->type == type_ptr) {
+        if (right->var_type->type == type_ptr) {
             node->left = left;
             node->right = right;
         }
@@ -208,6 +217,21 @@ Node* statement() {
             if (!name) {
                 error_token(now_token, "need variable name");
             }
+            List_iter* array_list = 0;
+            while (consume_operator("[")) {
+                add_reverse_array_upd(&array_list);
+                array_list->data = ((void*)except_number());
+                consume_operator("]");
+            }
+            while (array_list) {
+                Typename* new_type = calloc(1, sizeof(Typename));
+                new_type->ptr_to = type;
+                new_type->type = type_ptr;
+                new_type->array = calloc(1, sizeof(Type_Array_info));
+                new_type->array->array_size  = ((int)array_list->data);
+                type = new_type;
+                array_list = array_list->prev;
+            }
             createLocalVarOffsaet(name->string, name->length, type);
             if (consume_operator("=")) {
                 now_token = name;
@@ -320,21 +344,24 @@ Node* unary() {
     while (true) {
         Token* current_token = now_token;
         if (consume_operator("+")) {
-            return primary();
+            return menber_access();
         } else if (consume_operator("-")) {
-            return new_node(NODE_SUB, new_node_num(0), primary());
+            return new_node(NODE_SUB, new_node_num(0), menber_access());
         } else if (consume_operator("*")) {
             Node* ref_to = unary();
             Node *node = calloc(1, sizeof(Node));
             node->type = NODE_REFER;
             node->left = ref_to;
-            if (ref_to->var_type->type != type_ptr) {
+            if (ref_to->var_type->type != type_ptr ) {
                 error_token(current_token, "after refer operator need Pointer type");
             }
             node->var_type = refer_ptr(ref_to->var_type);
             return node;
         } else if (consume_operator("&")) {
             Node* ref_to = unary();
+            if (is_array_ptr(ref_to->var_type)) {
+                return ref_to;
+            }
             Node *node = calloc(1, sizeof(Node));
             node->type = NODE_DEREFER;
             node->left = ref_to;
@@ -355,7 +382,7 @@ Node* unary() {
             return new_node_num(return_var);
             
         } else {
-            return primary();
+            return menber_access();
         }
     }
 }
@@ -369,7 +396,6 @@ Local_var* createLocalVarOffsaet(char* name, int length, Typename* type) {
                 Local_var* cur_var = iter_cur->data;
                 if (cur_var->size <= calc_var_size(type)) {
                     result = insert_reverse_array(before_of ,iter_cur);
-                    printf("# !! %s\n", str_trim(name, length));
                     break;
                 }
                 iter_cur = iter_cur->next;
@@ -438,6 +464,41 @@ void function_call_check(Token* function_name, function_def* call_func, int args
     return;
 }
 
+Node* menber_access() {
+    Token* current_token = now_token;
+    Node* node  = primary();
+    // a[1][2] = (sizeof(*a) * 1) + (sizeof(**a) * 2) + &a; 
+    if (consume_operator("[")) {
+        Node* variable_ptr = node;
+        Node* result_offset = node;
+        Typename* working_type;
+        if (is_array_ptr(variable_ptr->var_type)) {
+            working_type = variable_ptr->var_type;
+        } else {
+            working_type = variable_ptr->var_type;
+        }
+        Typename* process_type = calloc(1, sizeof(Typename));
+        do {
+            if (working_type->type != type_ptr) {
+                //
+            }
+            working_type = working_type->ptr_to;
+
+            Node* current_offset_value = assign();
+            result_offset = new_node_plain(NODE_ADD, result_offset, 
+                                            new_node_plain(NODE_MLU, new_node_num(calc_var_size(working_type)), current_offset_value, process_type),
+                                            process_type);
+            process_type->type = working_type->type;
+        consume_operator("]");
+        } while (consume_operator("["));
+        Node* result = new_node_plain(NODE_REFER, result_offset,0 , process_type);
+        return result;
+    }
+    return node;
+}
+
+
+
 Node* primary() {
     if (consume_operator("(")) {
         Node *node = assign();
@@ -481,6 +542,13 @@ Node* primary() {
             node->data = lvar;
             node->var_type = lvar->type;
             node->data = lvar;
+            if (is_array_ptr(node->var_type)) {
+                Node* result = calloc(1, sizeof(Node));
+                result->type = NODE_DEREFER;
+                result->left = node;
+                result->var_type = node->var_type;
+                return result;
+            }
             return node;
         }
 
@@ -530,15 +598,22 @@ Node* type_convention(Node* node, Typename* cast_to) {
     return result;
 }
 
+int calc_array_first_offset(Typename* var) {
+    if (var->array != 0) {
+        return (calc_var_size(var->ptr_to) * (var->array->array_size - 1)) ;
+    }
+    return 0;
+}
+
 void Lvar_offset_calc(List_index* index) {
     List_iter* cur = index->start;
     while (cur) {
         Local_var* new_var = cur->data;
         if (cur->prev) {
             Local_var* old_var = cur->prev->data;
-            new_var->offset = old_var->offset + old_var->size;
+            new_var->offset = old_var->offset + old_var->size + calc_array_first_offset(new_var->type);
         } else {
-            new_var->offset = 8;
+            new_var->offset = 8 + calc_array_first_offset(new_var->type);
         }
         cur = cur->next;
     }

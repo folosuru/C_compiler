@@ -36,11 +36,37 @@ bool is_type_conflict(Typename* p1,Typename* p2) {
     return false;
 }
 
+int calc_var_redister_size(Typename* type) {
+    switch (type->type){
+        case type_int: {
+            return 4;
+        }
+
+        case type_ptr: {
+            return 8;
+        }
+    
+        default:
+            return 0;
+            break;
+    }
+}
 int calc_var_size(Typename* type) {
-    if (type->type == type_int) {
-        return 4;
-    } else {
-        return 8;
+    switch (type->type){
+        case type_int: {
+            return 4;
+        }
+
+        case type_ptr: {
+            if (type->array != 0) {
+                return (calc_var_size(type->ptr_to) * type->array->array_size);
+            }
+            return 8;
+        }
+    
+        default:
+            return 0;
+            break;
     }
 }
 Typename* create_ptr_to(Typename* p) {
@@ -53,6 +79,14 @@ Typename* create_ptr_to(Typename* p) {
     p->point_this_type = result;
     return result;
 }
+
+bool is_array_ptr(Typename* p) {
+    if (p->type == type_ptr && p->array != 0) {
+        return true;
+    }
+    return false;
+}
+
 Typename* refer_ptr(Typename* p) {
     return p->ptr_to;
 }

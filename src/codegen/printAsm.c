@@ -36,7 +36,7 @@ char* getRedisterName(redister_word word, int size_byte) {
     case 1:
         return redister_word_str[word][3];
     default:
-        return redister_word_str[word][0];
+        return "UNKNOWN TYPE SIZE";
     }
 }
 
@@ -173,6 +173,6 @@ char* get_action_size_prefix(int byte_size) {
         case 2: return "WORD";
         case 4: return "DWORD";
         case 8: return "QWORD";
-        default: return "";
+        default: return  "UNKNOWN TYPE SIZE";
     }
 }

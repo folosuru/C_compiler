@@ -3,6 +3,7 @@
 #include "printAsm.h"
 #include "../util/array_util.h"
 #include "../util/string_util.h"
+#include "../optimize/optimize.h"
 
 int get_node_offset(Node* node) {
     switch (node->type){
@@ -26,9 +27,8 @@ void push_lval_ptr(Node* node) {
         printf("  mov rax, rbp\n");
         printf("  sub rax, %d  # variable %s\n", get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
     } else if (node->type == NODE_REFER) {
-        push_lval_ptr(node->left);
-        print_pop(rdi);
-        printf("  mov rax, [rdi] # refer\n ");
+        calc(node->left);
+        print_pop(rax);
     } else {
         error("is not variable %d", node->type);
     }
@@ -41,10 +41,11 @@ int gen_Label_no() {
 }
 
 char* get_size_word_node(Node* node) {
-    return get_action_size_prefix(calc_var_size(node->var_type));
+    return get_action_size_prefix(calc_var_redister_size(node->var_type));
 }
 
-void calc(Node* node) {
+void calc(Node* node_) {
+    Node* node = optimize(node_);
     switch (node->type) {
         case NODE_DO_NOTHING : {
             return ;
@@ -55,12 +56,12 @@ void calc(Node* node) {
             return;
         }
         case NODE_LOCALVALUE: {
-            printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
+            printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
             print_push_register(rax);
             return;
         }
         case NODE_ARG: {
-            printf("  mov %s, %s PTR [rbp + %d]\n", getRedisterName(rax, calc_var_size(node->var_type)), get_size_word_node(node), get_node_offset(node));
+            printf("  mov %s, %s PTR [rbp + %d]\n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node), get_node_offset(node));
             print_push_register(rax);
             return;
         }
@@ -68,17 +69,17 @@ void calc(Node* node) {
             if (node->left->type == NODE_LOCALVALUE) {
                 calc(node->right);  // こっちがrdi
                 print_pop(rdi);
-                printf("  mov %s PTR [rbp - %d], %s # assign %s \n", get_size_word_node(node->left), get_node_offset(node->left), getRedisterName(rdi, calc_var_size(node->left->var_type)), str_trim(((Local_var*)node->left->data)->name, ((Local_var*)node->left->data)->len));
+                printf("  mov %s PTR [rbp - %d], %s # assign %s \n", get_size_word_node(node->left), get_node_offset(node->left), getRedisterName(rdi, calc_var_redister_size(node->left->var_type)), str_trim(((Local_var*)node->left->data)->name, ((Local_var*)node->left->data)->len));
             } else if (node->left->type == NODE_ARG) {
                 calc(node->right);  // こっちがrdi
                 print_pop(rdi);
-                printf("  mov %s PTR [rbp + %d], %s\n", get_size_word_node(node->left), get_node_offset(node->left), getRedisterName(rdi, calc_var_size(node->left->var_type)));
+                printf("  mov %s PTR [rbp + %d], %s\n", get_size_word_node(node->left), get_node_offset(node->left), getRedisterName(rdi, calc_var_redister_size(node->left->var_type)));
             } else if (node->left->type == NODE_REFER) {
                 push_lval_ptr(node->left);  // rax
                 calc(node->right);  // こっちがrdi
                 print_pop(rdi);
                 print_pop(rax);
-                printf("  mov %s PTR [rax], %s\n", get_size_word_node(node->left), getRedisterName(rdi, calc_var_size(node->left->var_type)));
+                printf("  mov %s PTR [rax], %s\n", get_size_word_node(node->left), getRedisterName(rdi, calc_var_redister_size(node->left->var_type)));
             }
             print_push_register(rdi);
             return;;
@@ -178,14 +179,15 @@ void calc(Node* node) {
         case NODE_REFER : {
             calc(node->left);
             printf("  pop rax #ref\n");
-            printf("  mov %s, %s PTR [rax]\n", getRedisterName(rax, calc_var_size(refer_ptr(node->left->var_type))), get_action_size_prefix(calc_var_size(refer_ptr(node->left->var_type))));
+            printf("  mov %s, %s PTR [rax]\n", getRedisterName(rax, calc_var_redister_size(node->var_type)),
+                                               get_action_size_prefix(calc_var_redister_size(node->var_type)));
             printf("  push rax\n");
             return;
         }
         case NODE_TYPE_CONVENTION: {
             calc(node->left);
             print_pop(rax);
-            printf("  movsx rax, %s\n", getRedisterName(rax, calc_var_size(node->left->var_type)));
+            printf("  movsx rax, %s\n", getRedisterName(rax, calc_var_redister_size(node->left->var_type)));
             print_push_register(rax);
             return;
         }

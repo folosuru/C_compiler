@@ -100,7 +100,7 @@ char* consume_variable();
 Typename* consume_typename(Typename* parent);
 int except_number();
 void calc(Node* node);
-
+Node* new_node_num(int val);
 Node* get_NodeTree();
 Node* statement();
 Node* expr();
@@ -110,6 +110,7 @@ Node* equal_operator();
 Node* rerational_operator();
 Node* add_sub_operator();
 Node* mlu();
+Node* menber_access() ;
 Node* primary();
 Node* unary();
 

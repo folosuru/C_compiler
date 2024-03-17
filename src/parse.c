@@ -28,7 +28,8 @@ int is_operator(char* string) {
     if (string[0] == '>' || string[0] == '<' ||
         string[0] == '+' || string[0] == '-' || string[0] == '*' || string[0] == '/' || 
         string[0] == '(' || string[0] == ')' || string[0] == ';' || string[0] == '=' ||
-        string[0] == '{' || string[0] == '}' || string[0] == ',' || string[0] == '&') {
+        string[0] == '{' || string[0] == '}' || string[0] == ',' || string[0] == '&' ||
+        string[0] == '[' || string[0] == ']' ) {
         return 1;
     }
     return 0;
