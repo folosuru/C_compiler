@@ -186,6 +186,9 @@ void calc(Node* node_) {
         }
         case NODE_TYPE_CONVENTION: {
             calc(node->left);
+            if (calc_var_redister_size(node->left->var_type) == 4)  {
+                return;
+            }
             print_pop(rax);
             printf("  movsx rax, %s\n", getRedisterName(rax, calc_var_redister_size(node->left->var_type)));
             print_push_register(rax);
