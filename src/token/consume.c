@@ -42,9 +42,14 @@ Typename* create_typename(typename_type t, Typename* ptr_to) {
 }
 
 Typename* consume_typename(Typename* parent) {
-    if (now_token->type == TOKEN_PRESERVED_WORD && now_token->value == KEYWORD_INT) {
-        now_token = now_token->next;
-        return consume_typename( create_typename(type_int,0) );
+    if (now_token->type == TOKEN_PRESERVED_WORD ) { 
+        if ( now_token->value == KEYWORD_INT) {
+            now_token = now_token->next;
+            return consume_typename( create_typename(type_int,0) );
+        } else if (now_token->value == KEYWORD_CHAR) {
+            now_token = now_token->next;
+            return consume_typename( create_typename(type_char,0) );
+        }
     }
     if (parent == 0) {
         return 0;

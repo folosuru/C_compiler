@@ -33,7 +33,7 @@ if [ "$cmake_result" != "0" ]; then
   exit 1
 fi
 
-# << TEST_PASS
+<< TEST_PASS
 assert 0 '0;'
 assert 42 '42;'
 assert 64 '8*8;'
@@ -83,11 +83,17 @@ assert 8 'return sizeof(int*);'
 assert_func 0 'int foo(); int main(){return 0;}'
 assert_func 6 'int* alloc_args(int arg1, int arg2, int arg3); int main() {int* p = alloc_args(1,2,3); return *(p) + *(p+1) + *(p+2);}'
 assert_func 7 'int* alloc_args(int arg1, int arg2, int arg3); int main() {int* p = alloc_args(1,2,3); *(p+1) = 7; return *(p+1);}'
-#TEST_PASS
+
 
 assert 5 'int var = 5;int* a = &var; return a[0];'
 assert 7 'int a[8]; a[1] = 7; return a[1];'
 assert 5 'int a[8][4]; a[2][3] = 5; return a[2][3];'
 assert_func 3 'int* alloc_args(int arg1, int arg2, int arg3); int main() {int* p = alloc_args(1,2,3); p[2];}'
 assert 3 'int a[2];*a = 1;*(a + 1) = 2;int *p;p = a;return *p + *(p + 1);'
+TEST_PASS
+
+assert 12 'char a; char b; b = 5; a = 7; return a+b;'
+assert 144 'char a; char b; b = 200; a = 200; return a+b;'
+assert 12 'char a[12]; return sizeof(a);'
+assert 3 'char x[3];x[0] = -1;x[1] = 2;int y;y = 4;return x[0] + y;'
 echo OK

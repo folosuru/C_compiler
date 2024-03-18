@@ -1,6 +1,7 @@
 #include <stdbool.h>
 typedef enum {
     type_int,
+    type_char,
     type_ptr
 } typename_type;
 
@@ -18,6 +19,7 @@ struct Typename{
 
 typedef struct {
     Typename* int_type;
+    Typename* char_type;
 } well_known_type;
 
 

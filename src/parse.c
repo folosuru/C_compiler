@@ -68,6 +68,11 @@ int is_preserved_keyword(char* str, Preserved_Word* word) {
         *word = KEYWORD_SIZEOF;
         return 6;
     }
+    if (keyword_match(str, "char")){
+        *word = KEYWORD_CHAR;
+        return 4;
+    }
+    
     return 0;
 }
 

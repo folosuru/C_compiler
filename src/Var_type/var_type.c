@@ -38,6 +38,10 @@ bool is_type_conflict(Typename* p1,Typename* p2) {
 
 int calc_var_redister_size(Typename* type) {
     switch (type->type){
+        case type_char: {
+            return 1;
+        }
+
         case type_int: {
             return 4;
         }
@@ -53,6 +57,9 @@ int calc_var_redister_size(Typename* type) {
 }
 int calc_var_size(Typename* type) {
     switch (type->type){
+        case type_char: {
+            return 1;
+        }
         case type_int: {
             return 4;
         }
@@ -97,6 +104,9 @@ well_known_type* get_wellknown_type() {
         wellknown_var = calloc(1, sizeof(well_known_type));
         wellknown_var->int_type = calloc(1, sizeof(Typename));
         wellknown_var->int_type->type = type_int;
+        wellknown_var->char_type = calloc(1, sizeof(Typename));
+        wellknown_var->char_type->type = type_char;
+
     }
     return wellknown_var;
 }

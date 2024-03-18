@@ -81,7 +81,7 @@ typedef enum {
     KEYWORD_WHILE,
     KEYWORD_INT,
     KEYWORD_SIZEOF,
-    
+    KEYWORD_CHAR
 } Preserved_Word;
 
 typedef struct program Program;
