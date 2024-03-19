@@ -56,7 +56,12 @@ void calc(Node* node_) {
             return;
         }
         case NODE_LOCALVALUE: {
-            printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
+            if (calc_var_redister_size(node->var_type) >= 4) {
+                printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
+            }
+            if (calc_var_redister_size(node->var_type) < 4) {
+                printf("  movzx %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, 8/*calc_var_redister_size(node->var_type)*/), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
+            }
             print_push_register(rax);
             return;
         }
@@ -179,8 +184,13 @@ void calc(Node* node_) {
         case NODE_REFER : {
             calc(node->left);
             printf("  pop rax #ref\n");
-            printf("  mov %s, %s PTR [rax]\n", getRedisterName(rax, calc_var_redister_size(node->var_type)),
-                                               get_action_size_prefix(calc_var_redister_size(node->var_type)));
+            if (calc_var_redister_size(node->var_type) >= 4) {
+                printf("  mov %s, %s PTR [rax]\n", getRedisterName(rax, calc_var_redister_size(node->var_type)),
+                                                   get_action_size_prefix(calc_var_redister_size(node->var_type)));
+            } else {
+                printf("  movsx %s, %s PTR [rax]\n", getRedisterName(rax, 8),
+                                                   get_action_size_prefix(calc_var_redister_size(node->var_type)));
+            }
             printf("  push rax\n");
             return;
         }
