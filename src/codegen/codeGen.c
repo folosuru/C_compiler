@@ -26,6 +26,12 @@ void push_lval_ptr(Node* node) {
     if (node->type == NODE_LOCALVALUE) {
         printf("  mov rax, rbp\n");
         printf("  sub rax, %d  # variable %s\n", get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
+    } else if ((node->type == NODE_ARG)) {
+        printf("  mov rax, rbp\n");
+        printf("  add rax, %d  # variable %s\n", get_node_offset(node), str_trim(((Args_var*)node->data)->name, ((Args_var*)node->data)->len));
+    } else if (node->type == NODE_GLOBAL_VAR ) {
+        Globalvar_def* global_var = node->data;
+        printf("  lea rax, [rip + %s]  # global variable %s\n", global_var->name, global_var->name);
     } else if (node->type == NODE_REFER) {
         calc(node->left);
         print_pop(rax);
@@ -70,6 +76,15 @@ void calc(Node* node_) {
             print_push_register(rax);
             return;
         }
+        case NODE_GLOBAL_VAR: {
+            Globalvar_def* global_var = node->data;
+            printf("  mov %s, %s PTR [rip + %s]\n", 
+                    getRedisterName(rax, calc_var_redister_size(node->var_type)),
+                    get_size_word_node(node),
+                    global_var->name);
+            print_push_register(rax);
+            return;
+        }
         case NODE_ASSIGN :{
             if (node->left->type == NODE_LOCALVALUE) {
                 calc(node->right);  // こっちがrdi
@@ -79,6 +94,11 @@ void calc(Node* node_) {
                 calc(node->right);  // こっちがrdi
                 print_pop(rdi);
                 printf("  mov %s PTR [rbp + %d], %s\n", get_size_word_node(node->left), get_node_offset(node->left), getRedisterName(rdi, calc_var_redister_size(node->left->var_type)));
+            } else if (node->left->type == NODE_GLOBAL_VAR) {
+                Globalvar_def* global_var = node->left->data;
+                calc(node->right);  // こっちがrdi
+                print_pop(rdi);
+                printf("  mov %s PTR [rip + %s], %s\n", get_size_word_node(node->left), global_var->name , getRedisterName(rdi, calc_var_redister_size(node->left->var_type)));
             } else if (node->left->type == NODE_REFER) {
                 push_lval_ptr(node->left);  // rax
                 calc(node->right);  // こっちがrdi
@@ -173,6 +193,7 @@ void calc(Node* node_) {
             }
             printf(" sub rsp, 32\n");
             printf("  call %s\n", function_name);
+            printf(" add rsp, 32\n");
             un_align_rsp(data->args_cnt);
             print_push_register(rax);
             return;

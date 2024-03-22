@@ -22,11 +22,16 @@ int main(int argc , char **argv) {
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     while (true) {
-        function_def* function = getFunction();
+        asm_label_def* function = getFunction();
         if (function == 0) {
             break;
         }
-        print_function_def(function);
+        if (function->func != 0) {
+            print_function_def(function->func);
+        }
+        if (function->variable != 0) {
+            print_global_var_def(function->variable);
+        }
     }
     return 0;
 }

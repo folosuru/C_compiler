@@ -24,7 +24,6 @@ assert() {
 }
 
 
-
 cmake -S . -B ./build/
 cmake --build ./build/
 cmake_result="$?"
@@ -96,4 +95,8 @@ assert 12 'char a; char b; b = 5; a = 7; return a+b;'
 assert 144 'char a; char b; b = 200; a = 200; return a+b;'
 assert 12 'char a[12]; return sizeof(a);'
 assert 3 'char x[3];x[0] = -1;x[1] = 2;int y;y = 4;return x[0] + y;'
+# assert 5 'int foo[5];foo[2] = 5; int* p = &(foo[2]);return *p;' #todo
+assert_func 5 'int func(int a) {int* ptr = &a; return *ptr;} int main() { return func(5);}'
+assert_func 5 'int foo; int main(){foo = 5; return foo;}'
+assert_func 7 'int foo; int update_var(){ foo = 7; return 0;} int main(){update_var(); return foo;}'
 echo OK

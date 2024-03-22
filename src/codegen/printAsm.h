@@ -21,6 +21,7 @@ typedef enum  {
 
 char* getRedisterName(redister_word word, int size_byte);
 void print_function_def(function_def*);
+void print_global_var_def(Globalvar_def*);
 
 void print_push_register(redister_word word);
 void print_push_number(int num);

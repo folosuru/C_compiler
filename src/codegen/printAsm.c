@@ -137,6 +137,7 @@ void print_function_def(function_def* function) {
     if (!function->program) {
         return;
     }
+    printf(".text\n");
     printf("%s:\n", str_trim(function->name, function->name_length));
     print_push_register(rbp);
     printf("  mov rbp, rsp\n");
@@ -157,6 +158,13 @@ void print_function_def(function_def* function) {
     printf("  pop rbp\n");
     printf("  ret\n");
 }
+
+void print_global_var_def(Globalvar_def* def) {
+    printf(".bss\n");
+    printf("%s:\n", def->name);
+    printf("  .zero %d\n", calc_var_size(def->type));
+}
+
 void print_args_push(function_def* function) {
     for (int i = 1;function->args_count >= i; i++) {
         redister_word arg_place = get_args_place_for(i);

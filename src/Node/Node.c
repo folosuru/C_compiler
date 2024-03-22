@@ -65,6 +65,7 @@ function_def* working_function;
 void Lvar_offset_calc(List_index* index);
 // function_def*
 List_iter* found_function;
+List_iter* found_global_var;
 int calc_arg_offset();
 
 Args_var* createArgsVarOffsaet(char* name, int length, Typename* type, int index) {
@@ -88,7 +89,7 @@ Args_var* createArgsVarOffsaet(char* name, int length, Typename* type, int index
     return new_var;
 }
 
-function_def* getFunction() {
+asm_label_def* getFunction() {
     if (at_eof()) {
         return 0;
     }
@@ -97,55 +98,70 @@ function_def* getFunction() {
     if (!type) {
         error_token(now_token, "nanikore?");
     }
-    working_function = calloc(4, sizeof(function_def));
-    working_function->return_value = type;
     Token* name = consume_identify();
     if (!name) {
         error_token(now_token, "need function name");
     }
-    working_function->name = name->string;
-    working_function->name_length = name->length;
-    consume_operator("(");
-    int args_cnt = 0;
-    bool arg_empty_flag = false;
-    Token* empty_arg = 0;
-    while (!consume_operator(")")) {
-        Typename* arg_type = consume_typename(0);
-        if (!arg_type) {
-            error_token(now_token, "need typename");
-        }
-        Token* arg_name = consume_identify();
-        if (!arg_name) {
-            arg_empty_flag = true;
-            if (!empty_arg) {
-                empty_arg = now_token;
+
+    if (consume_operator("(")) {
+        working_function = calloc(4, sizeof(function_def));
+        working_function->return_value = type;
+        working_function->name = name->string;
+        working_function->name_length = name->length;
+        int args_cnt = 0;
+        bool arg_empty_flag = false;
+        Token* empty_arg = 0;
+        while (!consume_operator(")")) {
+            Typename* arg_type = consume_typename(0);
+            if (!arg_type) {
+                error_token(now_token, "need typename");
             }
-            createArgsVarOffsaet(0, 0, arg_type, working_function->args_count);
-        } else {
-            for (List_iter* current = working_function->args_list; current != 0; current = current->prev ) {
-                Args_var* current_var = current->data;
-                if (current_var->len == arg_name->length && !memcmp(current_var->name, arg_name->string, current_var->len)) {
-                    error_token(arg_name, "Arg name Duplicate");
+            Token* arg_name = consume_identify();
+            if (!arg_name) {
+                arg_empty_flag = true;
+                if (!empty_arg) {
+                    empty_arg = now_token;
                 }
-            }    
-            createArgsVarOffsaet(arg_name->string, arg_name->length, arg_type, working_function->args_count);
+                createArgsVarOffsaet(0, 0, arg_type, working_function->args_count);
+            } else {
+                for (List_iter* current = working_function->args_list; current != 0; current = current->prev ) {
+                    Args_var* current_var = current->data;
+                    if (current_var->len == arg_name->length && !memcmp(current_var->name, arg_name->string, current_var->len)) {
+                        error_token(arg_name, "Arg name Duplicate");
+                    }
+                }    
+                createArgsVarOffsaet(arg_name->string, arg_name->length, arg_type, working_function->args_count);
+            }
+            working_function->args_count++;
+            consume_operator(",");
         }
-        working_function->args_count++;
-        consume_operator(",");
+        if (consume_operator("{")) {
+            if (arg_empty_flag) {
+                error_token(empty_arg, "function impl needs arg name");
+            }
+            working_function->program = getProgram();
+            if (working_function->lvar) {
+                Lvar_offset_calc(working_function->lvar->index);
+            }
+        } else {
+            consume_operator(";");
+        }
+        add_reverse_array_upd(&found_function)->data = working_function;
+        asm_label_def* result = calloc(1, sizeof(asm_label_def));
+        result->func = working_function;
+        return result;
+    } else if (consume_operator(";")) {
+        asm_label_def* result = calloc(1, sizeof(asm_label_def));
+        result->variable = calloc(1, sizeof(Globalvar_def));
+        result->variable->is_impl = true;
+        result->variable->name = str_trim(name->string, name->length);
+        result->variable->length = name->length;
+        result->variable->type = type;
+        List_iter* list = add_reverse_array_upd(&found_global_var);
+        list->data = result->variable;
+        return result;
     }
-    if (consume_operator("{")) {
-        if (arg_empty_flag) {
-            error_token(empty_arg, "function impl needs arg name");
-        }
-        working_function->program = getProgram();
-        if (working_function->lvar) {
-            Lvar_offset_calc(working_function->lvar->index);
-        }
-    } else {
-        consume_operator(";");
-    }
-    add_reverse_array_upd(&found_function)->data = working_function;
-    return working_function;
+    return 0;
 }
 
 Program* getProgram() {
@@ -362,6 +378,10 @@ Node* unary() {
             if (is_array_ptr(ref_to->var_type)) {
                 return ref_to;
             }
+            if (ref_to->type == NODE_REFER) {
+                ref_to->left->var_type = create_ptr_to(ref_to->left->var_type);
+                return ref_to->left;
+            }
             Node *node = calloc(1, sizeof(Node));
             node->type = NODE_DEREFER;
             node->left = ref_to;
@@ -441,6 +461,18 @@ Args_var* getArgsVarOffset(Token* token) {
     return 0;
 }
 
+Globalvar_def* getGlobalVar(Token* token) {
+    for (List_iter* current = found_global_var; current != 0; current = current->prev) {
+        Globalvar_def* current_var = current->data;
+        if (current_var->length == token->length) {
+            if (memcmp(current_var->name, token->string, current_var->length) == 0) {
+                return current_var;
+            }
+        }
+    }
+    return 0;
+}
+
 function_def* find_function(Token* name) {
     for (List_iter* current = found_function; current != 0; current = current->prev ) {
         function_def* current_var = current->data;
@@ -468,6 +500,7 @@ Node* menber_access() {
     Token* current_token = now_token;
     Node* node  = primary();
     // a[1][2] = (sizeof(*a) * 1) + (sizeof(**a) * 2) + &a; 
+    // a[1][2] = *((sizeof(*a) * 1) + (sizeof(**a) * 2) + &a); 
     if (consume_operator("[")) {
         Node* variable_ptr = node;
         Node* result_offset = node;
@@ -557,6 +590,14 @@ Node* primary() {
             node->type = NODE_ARG;
             node->data = args_var;
             node->var_type = args_var->type;
+            return node;
+        }
+
+        Globalvar_def* global_bar = getGlobalVar(variable);
+        if (global_bar) {
+            node->type = NODE_GLOBAL_VAR;
+            node->data = global_bar;
+            node->var_type = global_bar->type;
             return node;
         }
 

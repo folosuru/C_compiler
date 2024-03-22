@@ -27,7 +27,8 @@ typedef enum {
     NODE_REFER,
     NODE_DEREFER,
     NODE_DO_NOTHING,
-    NODE_TYPE_CONVENTION
+    NODE_TYPE_CONVENTION,
+    NODE_GLOBAL_VAR
 } NodeType;
 /*
      NODE_IF
@@ -160,7 +161,20 @@ struct function_def {
     #endif
 };
 
+typedef struct Globalvar_def Globalvar_def;
+struct Globalvar_def {
+    char* name;
+    int length;
+    Typename* type;
+    bool is_impl;
+};
+
+typedef struct {
+    function_def* func;
+    Globalvar_def* variable;
+} asm_label_def;
+
 int calc_var_size(Typename*);
-function_def* getFunction();
+asm_label_def* getFunction();
 
 #endif
