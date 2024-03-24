@@ -1,21 +1,23 @@
 #include "printAsm.h"
+#include "AsmData.h"
 #include "../util/string_util.h"
 #include <stdio.h>
 int stack_depth;
 int align_value;
 int function_offset_var;
 
-char* redister_word_str[16][4] = {
-    {"rax", "eax",  "ax",   "al"},
-    {"rbx", "ebx",  "bx",   "bl"},
-    {"rcx", "ecx",  "cx",   "cl"},
-    {"rdx", "edx",  "dx",   "dl"},
-    {"rsi", "esi",  "si",   "sil"},
-    {"rdi", "edi",  "di",   "dil"},
-    {"rbp", "ebp",  "bp",   "bpl"},
-    {"rsp", "esp",  "sp",   "spl"},
-    {"r8 ", "r8d",  "r8w" , "r8b"},
-    {"r9 ", "r9d",  "r9w" , "r9b"},
+char* redister_word_str[][4] = {
+//   64bit  32bit   16bit   8bit
+    {"rax", "eax",  "ax",   "al"  },
+    {"rbx", "ebx",  "bx",   "bl"  },
+    {"rcx", "ecx",  "cx",   "cl"  },
+    {"rdx", "edx",  "dx",   "dl"  },
+    {"rsi", "esi",  "si",   "sil" },
+    {"rdi", "edi",  "di",   "dil" },
+    {"rbp", "ebp",  "bp",   "bpl" },
+    {"rsp", "esp",  "sp",   "spl" },
+    {"r8 ", "r8d",  "r8w" , "r8b" },
+    {"r9 ", "r9d",  "r9w" , "r9b" },
     {"r10", "r10d", "r10w",	"r10b"},
     {"r11", "r11d", "r11w",	"r11b"},
     {"r12", "r12d", "r12w",	"r12b"},
@@ -23,8 +25,6 @@ char* redister_word_str[16][4] = {
     {"r14", "r14d", "r14w",	"r14b"},
     {"r15", "r15d", "r15w",	"r15b"}
 };
-
-
 char* getRedisterName(redister_word word, int size_byte) {
     switch (size_byte){
     case 8:
@@ -40,19 +40,50 @@ char* getRedisterName(redister_word word, int size_byte) {
     }
 }
 
+char* getRedisterNameByPrefix(struct redister_prefix* prefix) {
+    return getRedisterName(prefix->word, prefix->size);
+}
+
+char* asm_instruction_word_str[] = {
+    "push",
+    "pop",
+    "mov",
+    "movzx",
+    "movsx",
+    "movzb",
+    "add",
+    "sub",
+    "imul",
+    "idiv",
+    "cmp",
+    "je",
+    "jmp",
+    "cqo",
+    "sete",
+    "setne",
+    "setl",
+    "setle",
+
+};
+char* getAsm_instruction_word(Asm_word word) {
+    return asm_instruction_word_str[word];
+}
 
 void print_push_register(redister_word word) {
-    printf("  push %s\n", getRedisterName(word, 8));
+    //printf("  push %s\n", getRedisterName(word, 8));
+    create_asm_statement_enum(push, create_operand_redister(word, 8), 0);
     stack_depth++;
 }
 
 void print_push_number(int num) {
-    printf("  push %d\n", num);
+    //printf("  push %d\n", num);
     stack_depth++;
+    create_asm_statement_enum(push, create_operand_num(num), 0);
 }
 
 void print_pop(redister_word word) {
-    printf("  pop %s\n", getRedisterName(word, 8));
+    //printf("  pop %s\n", getRedisterName(word, 8));
+    create_asm_statement_enum(pop, create_operand_redister(word, 8), 0);
     stack_depth--;
 }
 
@@ -68,14 +99,27 @@ void align_rsp(int after_push_count) {
     }
 
     if (align_value != 0) {
-        printf("  sub rsp, %d\n", align_value);
+        //printf("  sub rsp, %d\n", align_value);
+        create_asm_statement_enum(sub, create_operand_redister(rsp, 8), create_operand_num(align_value));
     } else {
         align_value = 0;
     }
 }
+
+int sub_redister_arg_count(int val) {
+    if (val >= 4) {
+        return val - 4;
+    } else {
+        return 0;
+    }
+}
+
 void un_align_rsp(int before_push_count) {
     stack_depth = stack_depth - before_push_count;
-    printf("  add rsp, %d\n", (before_push_count * 8) + align_value);
+    if (sub_redister_arg_count(before_push_count) * 8 + align_value != 0) {
+//        printf("  add rsp, %d\n", ( sub_redister_arg_count(before_push_count)  * 8) + align_value);
+        create_asm_statement_enum(add, create_operand_redister(rsp, 8), create_operand_num(( sub_redister_arg_count(before_push_count)  * 8) + align_value));
+    }
 }
 
 redister_word get_args_place_for(int arg_index) {
@@ -137,12 +181,18 @@ void print_function_def(function_def* function) {
     if (!function->program) {
         return;
     }
-    printf(".text\n");
-    printf("%s:\n", str_trim(function->name, function->name_length));
+    stack_depth = 0;
+    //printf(".text\n");
+    create_asm_statement_directive(".text");
+    //printf("%s:\n", str_trim(function->name, function->name_length));
+    create_asm_statement_directive_fmt("%s:", str_trim(function->name, function->name_length));
     print_push_register(rbp);
-    printf("  mov rbp, rsp\n");
+    //printf("  mov rbp, rsp\n");
+    create_asm_statement_enum(mov, create_operand_redister(rbp,8), create_operand_redister(rsp,8));
+
     function_offset_var = calc_total_offset(function);
-    printf("  sub rsp, %d\n", function_offset_var); // !
+    //printf("  sub rsp, %d\n", function_offset_var);
+    create_asm_statement_enum(sub, create_operand_redister(rsp, 8), create_operand_num(function_offset_var));
     print_args_push(function);
     Program* program = function->program;
     while (program != 0) {
@@ -152,24 +202,33 @@ void print_function_def(function_def* function) {
         }
         calc(program->node);
         program = program->next;
-        printf("  pop rax\n");     
+        print_pop(rax);
     }
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
-    printf("  ret\n");
+    //printf("  mov rsp, rbp\n");
+    create_asm_statement_enum(mov, create_operand_redister(rsp, 8), create_operand_redister(rbp, 8));
+    //printf("  pop rbp\n");
+    print_pop(rbp);
+    //printf("  ret\n");
+    create_asm_statement_text("ret", 0,0);
 }
 
 void print_global_var_def(Globalvar_def* def) {
-    printf(".bss\n");
-    printf("%s:\n", def->name);
-    printf("  .zero %d\n", calc_var_size(def->type));
+    //printf(".bss\n");
+    create_asm_statement_directive(".bss");
+    //printf("%s:\n", def->name);
+    create_asm_statement_directive_fmt("%s:", def->name);
+    //printf("  .zero %d\n", calc_var_size(def->type));
+    create_asm_statement_directive_fmt("  .zero %d", calc_var_size(def->type));
 }
 
 void print_args_push(function_def* function) {
     for (int i = 1;function->args_count >= i; i++) {
         redister_word arg_place = get_args_place_for(i);
         if (arg_place != stack) {
-            printf("  mov [ rbp + %d ], %s\n", (i+1)*8 ,getRedisterName(arg_place, 8));
+            //printf("  mov [ rbp + %d ], %s\n", (i+1)*8 ,getRedisterName(arg_place, 8));
+            create_asm_statement_enum(mov, 
+                create_operand_text_fmt("[ rbp + %d ]", (i+1)*8),
+                create_operand_redister(arg_place, 8));
         } else {
             break;
         }

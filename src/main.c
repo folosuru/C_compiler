@@ -8,6 +8,8 @@
 #include "compiler.h"
 #include "Node/Node.h"
 #include "codegen/printAsm.h"
+#include "codegen/AsmData.h"
+#include "optimize/optimize.h"
 char* input;
 
 
@@ -33,5 +35,10 @@ int main(int argc , char **argv) {
             print_global_var_def(function->variable);
         }
     }
+    printf("# ----\n");
+    print_asm_statement_list();
+    optimize_asm(output_asm_list->index);
+    printf("# ----\n");
+    print_asm_statement_list();
     return 0;
 }
