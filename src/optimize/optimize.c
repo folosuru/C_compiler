@@ -26,6 +26,7 @@ Node* optimize(Node* node) {
     return node;
 }
 
+
 bool optimize_push(List_iter* push_iter) {
     Asm_statement* current_var = push_iter->data;
     if (push_iter->next != 0) {
@@ -42,8 +43,21 @@ bool optimize_push(List_iter* push_iter) {
                 if (push_iter->next->next != 0) {
                     push_iter->next->next->prev = push_iter->prev;
                 }
+                push_iter->next->data = 0;
                 return true;
             }
+            
+            current_var->instruction.value.preserved = mov;
+            operand* dest = next_var->operand1;
+            operand* from = current_var->operand1;
+            current_var->operand1 = dest;
+            current_var->operand2 = from;
+            
+            if (push_iter->next->next != 0) {
+                push_iter->next->next->prev = push_iter;
+            }
+            push_iter->next = push_iter->next->next;
+            return true;
         }
     }
     return false;
@@ -56,6 +70,7 @@ void optimize_asm(List_index* asm_source) {
     List_iter* current = asm_source->start;
     int change_count = 0;
     for ( ; current != 0; current = current->next ) {
+        if (current->data == 0) { continue; }
         Asm_statement* current_var = current->data;
         if (current_var->instruction.type != value_preserved) {
             continue;

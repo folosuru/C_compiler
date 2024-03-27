@@ -36,7 +36,7 @@ int main(int argc , char **argv) {
         }
     }
     printf("# ----\n");
-    print_asm_statement_list();
+    //print_asm_statement_list();
     optimize_asm(output_asm_list->index);
     printf("# ----\n");
     print_asm_statement_list();
