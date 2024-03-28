@@ -29,8 +29,12 @@ void error_token(Token* token, char* msg,  ...) {
     va_start(ap, msg);
     int pos = token->string - source;
     fprintf(stderr, "%s\n", source);
-    fprintf(stderr, "%*s", pos, " ");
-    fprintf(stderr, "^ ");
+    fprintf(stderr, "%*s", pos - 1, " ");
+    fprintf(stderr, "^");
+    for (int i = 0; i < token->length - 1; i++) {
+        fprintf(stderr, "~");
+    }
+    fprintf(stderr, "\n%*s", pos, " ");
     vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
     exit(1);
