@@ -221,6 +221,12 @@ void print_global_var_def(Globalvar_def* def) {
     create_asm_statement_directive_fmt("  .zero %d", calc_var_size(def->type));
 }
 
+void print_text_literal_def(string_literal_data* data) {
+    create_asm_statement_directive(".text");
+    create_asm_statement_directive_fmt(".Ltext%d:", data->id);
+    create_asm_statement_directive_fmt("  .string %s", str_trim(data->text, data->literal_length + 1));
+}
+
 void print_args_push(function_def* function) {
     for (int i = 1;function->args_count >= i; i++) {
         redister_word arg_place = get_args_place_for(i);

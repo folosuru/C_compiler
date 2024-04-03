@@ -3,7 +3,7 @@
 assert_func() {
   expected="$1"
   input="$2"
-  ./build/compiler "$input" > ./test/tmp.s
+  ./build/compiler "$input"  > ./test/tmp.s
   result="$?"
   if [ "$result" != "0" ]; then 
     echo "compile failed: return $result";
@@ -32,8 +32,11 @@ if [ "$cmake_result" != "0" ]; then
   echo 'build failed'
   exit 1
 fi
-
+mkdir test
 assert 0 '0;'
+
+assert_func 0 'int printf(char*); int main(){ printf("hello, world!\n"); return 0;}'
+
 assert 42 '42;'
 assert 64 '8*8;'
 assert 11 '8+8-5;'

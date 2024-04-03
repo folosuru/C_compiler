@@ -538,6 +538,14 @@ Node* primary() {
         expect_operator(")");
         return node;
     }
+    int string_literal = consume_text_literal();
+    if (string_literal != 0) {
+        Node* node = calloc(1, sizeof(Node));
+        node->type = NODE_STRING_LITERAL;
+        node->value = string_literal;
+        node->var_type = create_ptr_to(get_wellknown_type()->char_type);
+        return node;
+    }
     Token* variable = consume_identify();
     if (variable == 0) {
         return new_node_num(except_number());
@@ -600,6 +608,7 @@ Node* primary() {
             node->var_type = global_bar->type;
             return node;
         }
+
 
         if (!lvar) {
             error_token(variable, "unknown identify");

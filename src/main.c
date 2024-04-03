@@ -12,15 +12,23 @@
 #include "optimize/optimize.h"
 char* input;
 
-
 int main(int argc , char **argv) {
     if (argc != 2){
         fprintf(stderr , "hikisu");
         return 1;
     }
     input = argv[1];
-    now_token = tokenize(input);
+    struct tokenize_result* tokenize_result = tokenize(input);
+    now_token = tokenize_result->token;
+    List_iter* current_text = tokenize_result->string_literal;
+    while (true) {
 
+        if (current_text == 0) {
+            break;
+        }
+        print_text_literal_def(current_text->data);
+        current_text = current_text->next;
+    }
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     while (true) {

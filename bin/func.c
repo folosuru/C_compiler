@@ -15,6 +15,11 @@ int add_func(int a, int b) {
     return a+b;
 }
 
+int print_char_p(char* p) {
+    printf(p);
+    return 0;
+}
+
 int* alloc_args(int arg1, int arg2, int arg3) {
     int* result = calloc(3, sizeof(int));
     result[0] = arg1;

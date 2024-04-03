@@ -70,3 +70,13 @@ int except_number() {
     return result;
 }
 
+
+int consume_text_literal() {
+    if (now_token->type == TOKEN_STRING) {
+        int literal_id = now_token->value; 
+        now_token = now_token->next;
+        return literal_id;
+    } else {
+        return 0;
+    }
+}

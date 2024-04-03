@@ -66,6 +66,13 @@ void calc(Node* node_) {
             print_push_number(node->value);
             return;
         }
+        case NODE_STRING_LITERAL: {
+            create_asm_statement_text("lea", 
+                                      create_operand_redister(rax, 8),
+                                      create_operand_text_fmt("[ rip + .Ltext%d ]", node->value) );
+            print_push_register(rax);
+            return;
+        }
         case NODE_LOCALVALUE: {
             if (calc_var_redister_size(node->var_type) >= 4) {
                 //printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));

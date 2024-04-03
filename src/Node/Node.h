@@ -28,7 +28,8 @@ typedef enum {
     NODE_DEREFER,
     NODE_DO_NOTHING,
     NODE_TYPE_CONVENTION,
-    NODE_GLOBAL_VAR
+    NODE_GLOBAL_VAR,
+    NODE_STRING_LITERAL
 } NodeType;
 /*
      NODE_IF
@@ -92,13 +93,14 @@ struct program {
 };
 
 Node* get_NodeTree();
-Token* tokenize(char* p);
+
 Program* getProgram();
 bool consume_operator(char* operator);
 bool consume_preserved(Preserved_Word word);
 Token* consume_identify();
 char* consume_variable();
 Typename* consume_typename(Typename* parent);
+int consume_text_literal();
 int except_number();
 void calc(Node* node);
 Node* new_node_num(int val);
