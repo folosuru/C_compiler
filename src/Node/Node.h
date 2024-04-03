@@ -100,7 +100,7 @@ bool consume_preserved(Preserved_Word word);
 Token* consume_identify();
 char* consume_variable();
 Typename* consume_typename(Typename* parent);
-int consume_text_literal();
+string_literal_data* consume_text_literal();
 int except_number();
 void calc(Node* node);
 Node* new_node_num(int val);

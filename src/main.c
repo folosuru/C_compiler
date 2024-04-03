@@ -20,15 +20,17 @@ int main(int argc , char **argv) {
     input = argv[1];
     struct tokenize_result* tokenize_result = tokenize(input);
     now_token = tokenize_result->token;
-    List_iter* current_text = tokenize_result->string_literal;
+    if (tokenize_result->string_literal) {
+    List_iter* current_text = tokenize_result->string_literal->index->start;
     while (true) {
-
         if (current_text == 0) {
             break;
         }
         print_text_literal_def(current_text->data);
         current_text = current_text->next;
     }
+    }
+
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
     while (true) {

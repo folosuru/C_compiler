@@ -103,6 +103,9 @@ struct string_literal_char_info get_string_literal_1char_length(char* string) {
         result.source_length = 0;
         result.string_length = 0;
     }
+    if (*string == '\\') {
+        result.source_length = 2;
+    }
     return result;
 }
 
@@ -116,7 +119,7 @@ int get_string_literal_length(char** current) {
         *current = *current + len_data.source_length;
         result += len_data.string_length;
     }
-    return result;
+    return result + 1; // \0
 }
 
 char* create_string_literal_text(char** current_char) {
@@ -193,6 +196,7 @@ struct tokenize_result* tokenize(char* p) {
 
             current = create_token(TOKEN_STRING, current, str_start_pos, (now - str_start_pos) / sizeof(char));
             current->value = text_literal_id;
+            current->data.str_data = text_literal_data;
 
             text_literal_id++;
             now++;

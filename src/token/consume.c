@@ -71,9 +71,9 @@ int except_number() {
 }
 
 
-int consume_text_literal() {
+string_literal_data* consume_text_literal() {
     if (now_token->type == TOKEN_STRING) {
-        int literal_id = now_token->value; 
+        string_literal_data* literal_id = now_token->data.str_data;
         now_token = now_token->next;
         return literal_id;
     } else {

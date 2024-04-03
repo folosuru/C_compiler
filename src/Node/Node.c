@@ -538,12 +538,17 @@ Node* primary() {
         expect_operator(")");
         return node;
     }
-    int string_literal = consume_text_literal();
+    string_literal_data* string_literal = consume_text_literal();
     if (string_literal != 0) {
         Node* node = calloc(1, sizeof(Node));
         node->type = NODE_STRING_LITERAL;
-        node->value = string_literal;
-        node->var_type = create_ptr_to(get_wellknown_type()->char_type);
+        node->value = string_literal->id;
+        node->var_type = calloc(1, sizeof(Typename));
+
+                node->var_type->ptr_to = get_wellknown_type()->char_type;
+                node->var_type->type = type_ptr;
+                node->var_type->array = calloc(1, sizeof(Type_Array_info));
+                node->var_type->array->array_size  = (string_literal->string_length);
         return node;
     }
     Token* variable = consume_identify();

@@ -16,6 +16,13 @@ typedef enum {
     TOKEN_EOF
 } TokenType;
 
+typedef struct {
+    char* text;
+    int literal_length;
+    int string_length;
+    int id;
+} string_literal_data;
+
 
 typedef struct Token Token;
 struct Token {
@@ -24,14 +31,11 @@ struct Token {
     int value;
     char* string;
     int length;
+    union {
+        string_literal_data* str_data;
+    } data;
 };
 
-typedef struct {
-    char* text;
-    int literal_length;
-    int string_length;
-    int id;
-} string_literal_data;
 
 struct tokenize_result {
     Token* token;
