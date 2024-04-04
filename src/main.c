@@ -10,6 +10,7 @@
 #include "codegen/printAsm.h"
 #include "codegen/AsmData.h"
 #include "optimize/optimize.h"
+#include "util/file_load.h"
 char* input;
 
 int main(int argc , char **argv) {
@@ -17,7 +18,8 @@ int main(int argc , char **argv) {
         fprintf(stderr , "hikisu");
         return 1;
     }
-    input = argv[1];
+    input = file_load_buf(argv[1]);
+    
     struct tokenize_result* tokenize_result = tokenize(input);
     now_token = tokenize_result->token;
     if (tokenize_result->string_literal) {
