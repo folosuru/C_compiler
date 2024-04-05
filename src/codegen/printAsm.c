@@ -93,7 +93,7 @@ void print_mov_redister(redister_word to, redister_word from) {
 
 
 void align_rsp(int after_push_count) {
-    align_value = (((stack_depth + after_push_count)*8 + function_offset_var) % 16);
+    align_value = (function_offset_var % 16) + (((stack_depth + after_push_count) % 2)*8);
     if (align_value != 0) {
         align_value = 16 - align_value;
     }

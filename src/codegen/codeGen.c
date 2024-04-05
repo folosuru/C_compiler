@@ -253,6 +253,8 @@ void calc(Node* node_) {
                     break;
                 }
             }
+            // printf("  mov al, 0");
+            create_asm_statement_enum(mov, create_operand_redister(rax, 1), create_operand_num(0));
             //printf(" sub rsp, 32\n");
             create_asm_statement_enum(sub, create_operand_redister(rsp, 8), create_operand_num(32));
             //printf("  call %s\n", function_name);
