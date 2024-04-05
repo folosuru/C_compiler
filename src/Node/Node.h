@@ -83,7 +83,8 @@ typedef enum {
     KEYWORD_WHILE,
     KEYWORD_INT,
     KEYWORD_SIZEOF,
-    KEYWORD_CHAR
+    KEYWORD_CHAR,
+    KEYWORD_VOID
 } Preserved_Word;
 
 typedef struct program Program;
@@ -116,6 +117,9 @@ Node* mlu();
 Node* menber_access() ;
 Node* primary();
 Node* unary();
+
+Node* if_node();
+Node* for_node();
 
 Node* type_convention(Node* node, Typename* cast_to);
 

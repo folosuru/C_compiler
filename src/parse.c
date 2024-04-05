@@ -72,6 +72,10 @@ int is_preserved_keyword(char* str, Preserved_Word* word) {
         *word = KEYWORD_CHAR;
         return 4;
     }
+    if (keyword_match(str, "void")){
+        *word = KEYWORD_VOID;
+        return 4;
+    }
     
     return 0;
 }

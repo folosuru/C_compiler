@@ -49,7 +49,10 @@ Typename* consume_typename(Typename* parent) {
         } else if (now_token->value == KEYWORD_CHAR) {
             now_token = now_token->next;
             return consume_typename( create_typename(type_char,0) );
-        }
+        } else if (now_token->value == KEYWORD_VOID) {
+            now_token = now_token->next;
+            return consume_typename( create_typename(type_void,0) );
+        } 
     }
     if (parent == 0) {
         return 0;

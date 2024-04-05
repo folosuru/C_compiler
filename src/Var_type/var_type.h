@@ -2,6 +2,7 @@
 typedef enum {
     type_int,
     type_char,
+    type_void,
     type_ptr
 } typename_type;
 
@@ -20,6 +21,7 @@ struct Typename{
 typedef struct {
     Typename* int_type;
     Typename* char_type;
+    Typename* void_type;
 } well_known_type;
 
 
