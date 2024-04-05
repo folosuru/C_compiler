@@ -25,14 +25,13 @@ assert() {
 
 
 
-cmake -S . -B ./build/
-cmake --build ./build/
+cmake -S . -B ./build/ > /dev/null
+cmake --build ./build/ > /dev/null
 cmake_result="$?"
 if [ "$cmake_result" != "0" ]; then
   echo 'build failed'
   exit 1
 fi
-mkdir test
 
 assert_func 1 'test/test.c'
 exit
