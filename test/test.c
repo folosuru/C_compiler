@@ -50,6 +50,11 @@ int test_1() {
     return *p;
  }
 
+ int update_gvar(int a) {
+    g_var = a;
+    return 0;
+ }
+
 int main() {
     printf("Hello, world!\n");
     test_assert(1+1, 2, "1+1");
@@ -67,6 +72,8 @@ int main() {
     test_assert(test_5(), 5, "array");
     g_var = 7;
     test_assert(g_var, 7, "global var");
+    update_gvar(861);
+    test_assert(g_var, 861, "global var 2");
     printf("test ok\n");
     return 1;
 }
