@@ -2,6 +2,7 @@
 #include "../util/array_util.h"
 #include "../error/print_error.h"
 #include "../util/string_util.h"
+#include "../util/dictionary.h"
 Local_var* createLocalVarOffsaet(char* name, int length, Typename* type);
 
 
@@ -64,8 +65,8 @@ Node* get_NodeTree() {
 function_def* working_function;
 void Lvar_offset_calc(List_index* index);
 // function_def*
-List_iter* found_function;
-List_iter* found_global_var;
+dictionary_t found_function;
+dictionary_t found_global_var;
 int calc_arg_offset();
 
 Args_var* createArgsVarOffsaet(char* name, int length, Typename* type, int index) {
@@ -146,7 +147,7 @@ asm_label_def* getFunction() {
         } else {
             consume_operator(";");
         }
-        add_reverse_array_upd(&found_function)->data = working_function;
+        dictionary_add(&found_function, working_function->name, working_function->name_length, working_function);
         asm_label_def* result = calloc(1, sizeof(asm_label_def));
         result->func = working_function;
         return result;
@@ -157,8 +158,7 @@ asm_label_def* getFunction() {
         result->variable->name = str_trim(name->string, name->length);
         result->variable->length = name->length;
         result->variable->type = type;
-        List_iter* list = add_reverse_array_upd(&found_global_var);
-        list->data = result->variable;
+        dictionary_add(&found_global_var, result->variable->name, result->variable->length, result->variable);
         return result;
     }
     return 0;
@@ -433,27 +433,11 @@ Args_var* getArgsVarOffset(Token* token) {
 }
 
 Globalvar_def* getGlobalVar(Token* token) {
-    for (List_iter* current = found_global_var; current != 0; current = current->prev) {
-        Globalvar_def* current_var = current->data;
-        if (current_var->length == token->length) {
-            if (memcmp(current_var->name, token->string, current_var->length) == 0) {
-                return current_var;
-            }
-        }
-    }
-    return 0;
+    return dictionary_get(&found_global_var, token->string, token->length);
 }
 
 function_def* find_function(Token* name) {
-    for (List_iter* current = found_function; current != 0; current = current->prev ) {
-        function_def* current_var = current->data;
-        if (current_var->name_length != name->length) continue;
-        if (memcmp(current_var->name, name->string, current_var->name_length) == 0) {
-            return current_var;
-        }
-    }
-
-    return 0;
+    return dictionary_get(&found_function, name->string, name->length);
 }
 
 void function_call_check(Token* function_name, function_def* call_func, int args_count) {
