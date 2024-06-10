@@ -59,6 +59,7 @@ int main() {
     printf("Hello, world!\n");
     test_assert(1+1, 2, "1+1");
     test_assert(4*4, 16, "8*8");
+    test_assert(8/2, 4, "8/2");
     test_assert(5==5, 1, "5==5;");
     test_assert(5!=5, 0, "5!=5;");
     test_assert(3==5, 0, "3==5;");

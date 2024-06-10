@@ -72,6 +72,9 @@ bool optimize_chained_asm(List_iter* current) {
         if (current_var->instruction.type != value_preserved || next_var->instruction.type != value_preserved) {
             return false;
         }
+        if (current_var->operand1 == 0 || current_var->operand2 == 0) {
+            return false;
+        }
         if (current_var->operand1->type != value_preserved || next_var->operand1->type != value_preserved) {
             return false;
         }

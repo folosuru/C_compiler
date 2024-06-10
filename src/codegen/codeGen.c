@@ -241,17 +241,21 @@ void calc(Node* node_) {
             while (args_list) {
                 if (args_list->data) {
                     calc((Node*)(args_list->data));
-                    redister_word place_for = get_args_place_for(args_count);
-                    if (place_for != stack) {
-                        print_pop(place_for);
-                    }
-                    args_count--;
                 } 
                 if (args_list->prev != 0) {
                     args_list = args_list->prev;
                 } else {
                     break;
                 }
+            }
+            int counter = 1;
+            while (args_count != 0) {
+                    redister_word place_for = get_args_place_for(counter);
+                    if (place_for != stack) {
+                        print_pop(place_for);
+                    }
+                    counter++;
+                    args_count--;
             }
             // printf("  mov al, 0");
             create_asm_statement_enum(mov, create_operand_redister(rax, 1), create_operand_num(0));
