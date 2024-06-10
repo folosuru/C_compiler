@@ -126,7 +126,9 @@ void print_asm_statement_list() {
     if (output_asm_list != 0) {
     for (List_iter* current = output_asm_list->index->start; current != 0; current = current->next ) {
         Asm_statement* current_var = current->data;
-        print_asm_statement(current_var);
+        if (current_var != 0) {
+            print_asm_statement(current_var);
+        }
     }
     }
 }

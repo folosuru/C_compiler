@@ -63,6 +63,40 @@ bool optimize_push(List_iter* push_iter) {
     return false;
 }
 
+
+bool optimize_chained_asm(List_iter* current) {
+    Asm_statement* current_var = current->data;
+    if (current->next != 0) {
+        List_iter* next = current->next;
+        Asm_statement* next_var = next->data;
+        if (current_var->instruction.type != value_preserved || next_var->instruction.type != value_preserved) {
+            return false;
+        }
+        if (current_var->operand1->type != value_preserved || next_var->operand1->type != value_preserved) {
+            return false;
+        }
+        if (next_var->operand1->value.redister.word != current_var->operand1->value.redister.word) {
+            return false;
+        }
+        if (current_var->instruction.value.preserved == next_var->instruction.value.preserved) {
+            if (current_var->instruction.value.preserved == add || next_var->instruction.value.preserved == sub) {
+                if (current_var->operand2->type == value_num && next_var->operand2->type == value_num) {
+                    current_var->operand2->value.number += next_var->operand2->value.number;
+                    //next_var->operand2->value.number = 0;
+                    
+                    if (next->next != 0) {
+                        next->next->prev = current;
+                        current->next = next->next;
+                    }
+                    //current->next->data = 0;
+                    return true;
+                }
+            }
+        } 
+    }
+    return false;
+}
+
 void optimize_asm(List_index* asm_source) {
     if (asm_source == 0) {
         return;
@@ -78,7 +112,11 @@ void optimize_asm(List_index* asm_source) {
         if (current_var->instruction.value.preserved == push) {
             if (optimize_push(current)) {
                 change_count++;
+                continue;
             }
+        }
+        if (optimize_chained_asm(current)) {
+            change_count++;
         }
     }
     if (change_count != 0) {
