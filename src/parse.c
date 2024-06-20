@@ -29,7 +29,7 @@ int is_operator(char* string) {
         string[0] == '+' || string[0] == '-' || string[0] == '*' || string[0] == '/' || 
         string[0] == '(' || string[0] == ')' || string[0] == ';' || string[0] == '=' ||
         string[0] == '{' || string[0] == '}' || string[0] == ',' || string[0] == '&' ||
-        string[0] == '[' || string[0] == ']' ) {
+        string[0] == '[' || string[0] == ']' || string[0] == '.') {
         return 1;
     }
     return 0;
@@ -75,6 +75,10 @@ int is_preserved_keyword(char* str, Preserved_Word* word) {
     if (keyword_match(str, "void")){
         *word = KEYWORD_VOID;
         return 4;
+    }
+    if (keyword_match(str, "struct")){
+        *word = KEYWORD_STRUCT;
+        return 6;
     }
     
     return 0;

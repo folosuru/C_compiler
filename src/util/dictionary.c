@@ -43,6 +43,7 @@ void  dictionary_add(dictionary_t* dict, char* key, int len, void* data) {
 
 void* dictionary_get(dictionary_t* dict, char* key, int len) {
     dictionary_t* current = dict;
+    if (current->key == 0) return false;
     while (true) {
         if (len == current->len) {
             if (memcmp(key, current->key, len) == 0) {

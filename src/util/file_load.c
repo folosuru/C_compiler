@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 char* file_load_buf(char* filename) {
     FILE* file = fopen(filename, "r");

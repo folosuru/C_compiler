@@ -95,6 +95,13 @@ asm_label_def* getFunction() {
         return 0;
     }
     Typename* type;
+    if (consume_preserved(KEYWORD_STRUCT)) {
+        struct_define_node();
+        asm_label_def* result = calloc(1, sizeof(asm_label_def));
+        result->nothing = true;
+        return result;
+    }
+
     type = consume_typename(0);
     if (!type) {
         error_token(now_token, "nanikore?");
@@ -484,7 +491,6 @@ Node* menber_access() {
     }
     return node;
 }
-
 
 
 Node* primary() {

@@ -55,6 +55,12 @@ int test_1() {
     return 0;
  }
 
+struct foo {
+    char foooo;
+    int a;
+    char hoge;
+};
+
 int main() {
     printf("Hello, world!\n");
     test_assert(1+1, 2, "1+1");
@@ -76,5 +82,6 @@ int main() {
     update_gvar(861);
     test_assert(g_var, 861, "global var 2");
     printf("test ok\n");
+    printf("%d", sizeof(struct foo));
     return 1;
 }

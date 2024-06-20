@@ -52,7 +52,10 @@ Typename* consume_typename(Typename* parent) {
         } else if (now_token->value == KEYWORD_VOID) {
             now_token = now_token->next;
             return consume_typename( create_typename(type_void,0) );
-        } 
+        } else if (consume_preserved(KEYWORD_STRUCT)) {
+            Token* name = consume_identify();
+            return consume_typename(dictionary_get(defiened_struct_type, name->string, name->length));
+        }
     }
     if (parent == 0) {
         return 0;

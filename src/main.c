@@ -40,6 +40,9 @@ int main(int argc , char **argv) {
         if (function == 0) {
             break;
         }
+        if (function->nothing) {
+            continue;
+        }
         if (function->func != 0) {
             print_function_def(function->func);
         }
