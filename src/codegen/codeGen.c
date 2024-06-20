@@ -262,7 +262,7 @@ void calc(Node* node_) {
             //printf(" sub rsp, 32\n");
             create_asm_statement_enum(sub, create_operand_redister(rsp, 8), create_operand_num(32));
             //printf("  call %s\n", function_name);
-            create_asm_statement_text("call", create_operand_text_fmt("%s\n", function_name), 0);
+            create_asm_statement_text("call", create_operand_text_fmt("%s", function_name), 0);
             //printf(" add rsp, 32\n");
             create_asm_statement_enum(add, create_operand_redister(rsp, 8), create_operand_num(32));
             un_align_rsp(data->args_cnt);
