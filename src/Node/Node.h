@@ -30,7 +30,8 @@ typedef enum {
     NODE_DO_NOTHING,
     NODE_TYPE_CONVENTION,
     NODE_GLOBAL_VAR,
-    NODE_STRING_LITERAL
+    NODE_STRING_LITERAL,
+    // TODO : 変数のポインタを取ってそのオフセットにアクセスするnodeを作って楽をする
 } NodeType;
 /*
      NODE_IF

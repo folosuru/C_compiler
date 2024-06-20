@@ -149,6 +149,7 @@ asm_label_def* getFunction() {
             }
             working_function->program = getProgram();
             if (working_function->lvar) {
+
                 Lvar_offset_calc(working_function->lvar->index);
             }
         } else {
@@ -461,35 +462,36 @@ void function_call_check(Token* function_name, function_def* call_func, int args
 Node* menber_access() {
     Token* current_token = now_token;
     Node* node  = primary();
+    Node* result = node;
     // a[1][2] = (sizeof(*a) * 1) + (sizeof(**a) * 2) + &a; 
     // a[1][2] = *((sizeof(*a) * 1) + (sizeof(**a) * 2) + &a); 
-    if (consume_operator("[")) {
-        Node* variable_ptr = node;
-        Node* result_offset = node;
-        Typename* working_type;
-        if (is_array_ptr(variable_ptr->var_type)) {
-            working_type = variable_ptr->var_type;
-        } else {
-            working_type = variable_ptr->var_type;
-        }
-        Typename* process_type = calloc(1, sizeof(Typename));
-        do {
-            if (working_type->type != type_ptr) {
-                //
+    while (true) {
+        Token* operator_token = now_token;
+        if (consume_operator("[")) {  // 汚くてわけが分からない
+            Node* result_offset = node;
+            Typename* access_to_type = node->var_type;
+            do {
+                if (access_to_type->type != type_ptr) {
+                    error_token(current_token, "this type cannnot access(not pointer, or array)");
+                }
+                access_to_type = access_to_type->ptr_to;
+                Node* add_offset = new_node_plain(NODE_MLU, new_node_num(calc_var_size(access_to_type)), assign(), access_to_type);
+                result_offset = new_node_plain(NODE_ADD, result_offset, add_offset, access_to_type);
+            consume_operator("]");
+            } while (consume_operator("["));
+            result = new_node_plain(NODE_REFER, result_offset,0 , access_to_type);
+        } else if (consume_operator(".")) {
+            do {
+                if (result->var_type != type_struct) {
+                    error_token(operator_token, "value is not struct type");
+                }
+                
             }
-            working_type = working_type->ptr_to;
-
-            Node* current_offset_value = assign();
-            result_offset = new_node_plain(NODE_ADD, result_offset, 
-                                            new_node_plain(NODE_MLU, new_node_num(calc_var_size(working_type)), current_offset_value, process_type),
-                                            process_type);
-            process_type->type = working_type->type;
-        consume_operator("]");
-        } while (consume_operator("["));
-        Node* result = new_node_plain(NODE_REFER, result_offset,0 , process_type);
-        return result;
+        }else {
+            break;
+        }
     }
-    return node;
+    return result;
 }
 
 
