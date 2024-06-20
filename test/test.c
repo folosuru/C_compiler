@@ -58,7 +58,7 @@ int test_1() {
 struct foo {
     char foooo;
     int a;
-    char hoge;
+    char* hoge;
 };
 
 int main() {
@@ -81,7 +81,10 @@ int main() {
     test_assert(g_var, 7, "global var");
     update_gvar(861);
     test_assert(g_var, 861, "global var 2");
+    test_assert(sizeof(struct foo), 16, "sizeof struct foo");
+
+    struct foo a;
+
     printf("test ok\n");
-    printf("%d", sizeof(struct foo));
     return 1;
 }
