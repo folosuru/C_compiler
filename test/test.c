@@ -1,5 +1,6 @@
 void printf();
 void exit();
+void* calloc();
 
 
 int g_var;
@@ -59,7 +60,21 @@ struct foo {
     char foooo;
     int a;
     char* hoge;
+    int b;
 };
+
+int struct_access() {
+    struct foo val;
+    val.b = 24;
+    val.a = 18;
+    return val.a + val.b;
+}
+
+int struct_ptr() {
+    struct foo* val = calloc(1, sizeof(struct foo));
+    (*val).b = 42;
+    return (*val).b;
+}
 
 int main() {
     printf("Hello, world!\n");
@@ -81,10 +96,9 @@ int main() {
     test_assert(g_var, 7, "global var");
     update_gvar(861);
     test_assert(g_var, 861, "global var 2");
-    test_assert(sizeof(struct foo), 16, "sizeof struct foo");
-
-    struct foo a;
-
+    test_assert(sizeof(struct foo), 20, "sizeof struct foo");
+    test_assert(struct_access(), 42, "struct access");
+    test_assert(struct_ptr(), 42, "struct ptr");
     printf("test ok\n");
     return 1;
 }

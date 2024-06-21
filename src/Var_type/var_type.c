@@ -24,6 +24,9 @@ bool is_type_conflict(Typename* p1,Typename* p2) {
             return false;
         }
         for (;;) {
+            if (p1_cur->type == type_void || p2_cur->type == type_void) {
+                return false;
+            }
             if (p1_cur->type != p2_cur->type) { // int* + int**
                 return true;   
             }

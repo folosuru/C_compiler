@@ -26,7 +26,7 @@ operand* create_operand_text_fmt(char* write_str, ...) {
     va_start(ap, write_str);
 
     int write_size =  vsnprintf(str, 10, write_str, ap);
-    if (write_size > 10) {
+    if (write_size >= 10) {
         free(str);
         str = calloc(write_size + 1, sizeof(char));
         vsnprintf(str, write_size + 1, write_str, ap);
