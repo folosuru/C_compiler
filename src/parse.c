@@ -21,7 +21,8 @@ int is_operator(char* string) {
     if (strncmp(string, ">=", 2) == 0 ||
         strncmp(string, "<=", 2) == 0 ||
         strncmp(string, "==", 2) == 0 ||
-        strncmp(string, "!=", 2) == 0 
+        strncmp(string, "!=", 2) == 0 ||
+        strncmp(string, "->", 2) == 0 
         ) {
         return 2;
     }

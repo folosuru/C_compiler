@@ -73,7 +73,8 @@ int struct_access() {
 int struct_ptr() {
     struct foo* val = calloc(1, sizeof(struct foo));
     (*val).b = 42;
-    return (*val).b;
+    val->a = 7;
+    return (*val).b + val->a;
 }
 
 int main() {
@@ -98,7 +99,7 @@ int main() {
     test_assert(g_var, 861, "global var 2");
     test_assert(sizeof(struct foo), 20, "sizeof struct foo");
     test_assert(struct_access(), 42, "struct access");
-    test_assert(struct_ptr(), 42, "struct ptr");
+    test_assert(struct_ptr(), 49, "struct ptr");
     printf("test ok\n");
     return 1;
 }

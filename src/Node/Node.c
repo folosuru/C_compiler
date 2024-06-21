@@ -485,7 +485,6 @@ Node* menber_access() {
             struct struct_member* member = 0;
             do {
                 if (result->var_type->ptr_to->type != type_struct) {
-                    fprintf(stderr, "==%d", result->var_type->ptr_to);
                     error_token(operator_token, "value is not struct type");
                 }
                 Token* target = consume_identify();
@@ -500,7 +499,25 @@ Node* menber_access() {
                 result = new_node_plain(NODE_SUB, result , new_node_num(member->offset), member->type);
             } while (consume_operator("."));
             result = new_node_plain(NODE_REFER, result, 0, member->type);
-        }else {
+        } else if (consume_operator("->")) {
+            struct struct_member* member = 0;
+            do {
+                if (result->var_type->ptr_to->type != type_struct) {
+                    error_token(operator_token, "value is not struct type");
+                }
+                Token* target = consume_identify();
+                if (target == 0) {
+                    //
+                }
+                struct struct_define* struct_def = result->var_type->ptr_to->struct_data;
+                member = dictionary_get(struct_def->member, target->string, target->length);
+                if (member == 0) {
+                    error_token(target, "member not found");
+                }
+                result = new_node_plain(NODE_SUB, result , new_node_num(member->offset), member->type);
+            } while (consume_operator("."));
+            result = new_node_plain(NODE_REFER, result, 0, member->type);
+        } else {
             break;
         }
     }
