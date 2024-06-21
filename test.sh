@@ -26,7 +26,7 @@ assert() {
 
 
 cmake -S . -B ./build/ > /dev/null
-cmake --build ./build/ > /dev/null
+cmake --build ./build/
 cmake_result="$?"
 if [ "$cmake_result" != "0" ]; then
   echo 'build failed'
