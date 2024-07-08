@@ -63,11 +63,26 @@ struct foo {
     int b;
 };
 
+struct foo_foo {
+    struct foo f1;
+    struct foo* f2;
+};
+
 int struct_access() {
+    int other = 78416;
+
+    int p = 7;
     struct foo val;
-    val.b = 24;
+    val.b = 17;
     val.a = 18;
-    return val.a + val.b;
+    
+    if (other != 78416) {
+        return 5;
+    }
+    if (p != 7) {
+        return 4;
+    }
+    return val.a + val.b + p;
 }
 
 int struct_ptr() {
@@ -76,6 +91,19 @@ int struct_ptr() {
     val->a = 7;
     return (*val).b + val->a;
 }
+
+int more_struct() {
+    struct foo_foo v;
+    v.f1.a = 7;
+    return v.f1.a;
+}
+
+struct t1 {
+    char* str;
+    char* string;
+    int len;
+
+};
 
 int main() {
     printf("Hello, world!\n");
@@ -100,6 +128,7 @@ int main() {
     test_assert(sizeof(struct foo), 20, "sizeof struct foo");
     test_assert(struct_access(), 42, "struct access");
     test_assert(struct_ptr(), 49, "struct ptr");
+    test_assert(more_struct(), 7, "struct 2");
     printf("test ok\n");
     return 1;
 }

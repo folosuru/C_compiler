@@ -496,7 +496,7 @@ Node* menber_access() {
                 if (member == 0) {
                     error_token(target, "member not found");
                 }
-                result = new_node_plain(NODE_SUB, result , new_node_num(member->offset), member->type);
+                result = new_node_plain(NODE_ADD, result , new_node_num(member->offset),  create_ptr_to(member->type));
             } while (consume_operator("."));
             result = new_node_plain(NODE_REFER, result, 0, member->type);
         } else if (consume_operator("->")) {
@@ -514,7 +514,7 @@ Node* menber_access() {
                 if (member == 0) {
                     error_token(target, "member not found");
                 }
-                result = new_node_plain(NODE_SUB, result , new_node_num(member->offset), member->type);
+                result = new_node_plain(NODE_ADD, result , new_node_num(member->offset), create_ptr_to(member->type));
             } while (consume_operator("."));
             result = new_node_plain(NODE_REFER, result, 0, member->type);
         } else {
@@ -650,6 +650,9 @@ int calc_array_first_offset(Typename* var) {
     if (var->array != 0) {
         return (calc_var_size(var->ptr_to) * (var->array->array_size - 1)) ;
     }
+    if (var->struct_data != 0) {
+        return (calc_var_size(var));
+    }
     return 0;
 }
 
@@ -660,17 +663,17 @@ void Lvar_offset_calc(List_index* index) {
         Local_var* new_var = cur->data;
         if (cur->prev) {
             Local_var* old_var = cur->prev->data;
-            new_var->offset = old_var->offset + old_var->size + calc_array_first_offset(new_var->type);
+            new_var->offset = old_var->offset + old_var->size +  calc_var_size(new_var->type) ;//calc_array_first_offset(new_var->type);
             printf("# %-7.10s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
-                                        new_var->offset - calc_array_first_offset(new_var->type),
-                                        new_var->size + new_var->offset - calc_array_first_offset(new_var->type));
+                                        new_var->offset - calc_var_size(new_var->type),
+                                        new_var->offset);
         } else {
-            new_var->offset = 8 + calc_array_first_offset(new_var->type);
+            new_var->offset = 8 + calc_var_size(new_var->type) /*+ calc_array_first_offset(new_var->type)*/;
             printf("# %-7.20s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
-                                        new_var->offset - calc_array_first_offset(new_var->type),
-                                        new_var->offset + new_var->size - calc_array_first_offset(new_var->type));
+                                        new_var->offset,
+                                        new_var->offset - calc_var_size(new_var->type));
         }
         cur = cur->next;
     }
