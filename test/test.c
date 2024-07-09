@@ -137,13 +137,6 @@ int main() {
     test_assert(sizeof(struct foo), 20, "sizeof struct foo");
     test_assert(struct_access(), 42, "struct access");
     test_assert(struct_ptr(), 49, "struct ptr");
-    printf("%d\n",more_struct() );
-
-    printf("%d\n",more_struct() );
-    printf("%d\n",more_struct() );
-    printf("%d\n",more_struct() );
-    printf("%d\n",more_struct() );
-    printf("%d\n",more_struct() );
     test_assert(more_struct(), 7, "struct 2");
     printf("test ok\n");
     return 1;

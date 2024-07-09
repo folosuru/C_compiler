@@ -46,6 +46,14 @@ Node* new_node(NodeType type, Node* left, Node* right) {
     node->type = type;
   return node;
 }
+
+Node* createStatementNode(Node* stm) {
+    Node *node = calloc(1, sizeof(Node));
+    node->type = NODE_STATEMENT;
+    node->left = stm;
+    return node;
+}
+
 Node* new_node_num(int val) {
   Node *node = calloc(1, sizeof(Node));
   node->type = NODE_NUM;
@@ -231,6 +239,11 @@ Node* statement() {
             } else {
                 node = calloc(1, sizeof(Node));
                 node->type = NODE_DO_NOTHING;
+                if (consume_operator(";")) {
+                    return node;
+                } else {
+                    error_token(now_token, "need ;");
+                }
             }
         } else {
             node = assign();
@@ -238,7 +251,7 @@ Node* statement() {
 
 
         if (consume_operator(";")) {
-            return node;
+            return createStatementNode(node);
         } else {
             error_at(input, now_token->string, "missing ; ");
         }
