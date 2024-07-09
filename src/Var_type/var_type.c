@@ -159,7 +159,7 @@ struct struct_define* create_struct_define(char* name, int name_len) {
     return result;
 }
 
-void add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type) {
+struct struct_member* add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type) {
     struct struct_member* member = calloc(1, sizeof(struct struct_member));
     member->name = name;
     member->name_len = name_len;
@@ -174,4 +174,5 @@ void add_struct_member(struct struct_define* def, char* name, int name_len, Type
     }
     member->offset = def->size;
     def->size += calc_var_size(type);
+    return member;
 }
