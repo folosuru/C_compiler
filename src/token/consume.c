@@ -84,7 +84,7 @@ Typename* consume_typename(Typename* parent) {
                 if (!name) {
                     error_token(now_token, "need field name");
                 }
-//                struct struct_member* member = add_struct_member(struct_def, name->string, name->length, type);
+                struct struct_member* member = add_struct_member(struct_def, name->string, name->length, type);
                 if (!consume_operator(";")) {
                     error_token(now_token, "need ;");
                 }
