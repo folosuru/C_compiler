@@ -26,7 +26,7 @@ operand* create_operand_text_fmt(char* write_str, ...) {
     va_start(ap, write_str);
 
     int write_size =  vsnprintf(str, 10, write_str, ap);
-    if (write_size > 10) {
+    if (write_size >= 10) {
         free(str);
         str = calloc(write_size + 1, sizeof(char));
         vsnprintf(str, write_size + 1, write_str, ap);
@@ -126,7 +126,9 @@ void print_asm_statement_list() {
     if (output_asm_list != 0) {
     for (List_iter* current = output_asm_list->index->start; current != 0; current = current->next ) {
         Asm_statement* current_var = current->data;
-        print_asm_statement(current_var);
+        if (current_var != 0) {
+            print_asm_statement(current_var);
+        }
     }
     }
 }

@@ -10,16 +10,28 @@
 #include "codegen/printAsm.h"
 #include "codegen/AsmData.h"
 #include "optimize/optimize.h"
+#include "util/file_load.h"
 char* input;
-
 
 int main(int argc , char **argv) {
     if (argc != 2){
         fprintf(stderr , "hikisu");
         return 1;
     }
-    input = argv[1];
-    now_token = tokenize(input);
+    input = file_load_buf(argv[1]);
+    
+    struct tokenize_result* tokenize_result = tokenize(input);
+    now_token = tokenize_result->token;
+    if (tokenize_result->string_literal) {
+    List_iter* current_text = tokenize_result->string_literal->index->start;
+    while (true) {
+        if (current_text == 0) {
+            break;
+        }
+        print_text_literal_def(current_text->data);
+        current_text = current_text->next;
+    }
+    }
 
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");
@@ -27,6 +39,9 @@ int main(int argc , char **argv) {
         asm_label_def* function = getFunction();
         if (function == 0) {
             break;
+        }
+        if (function->nothing) {
+            continue;
         }
         if (function->func != 0) {
             print_function_def(function->func);

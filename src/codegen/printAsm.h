@@ -8,6 +8,7 @@ char* getRedisterNameByPrefix(struct redister_prefix* prefix);
 char* getAsm_instruction_word(Asm_word word);
 void print_function_def(function_def*);
 void print_global_var_def(Globalvar_def*);
+void print_text_literal_def(string_literal_data*);
 
 void print_push_register(redister_word word);
 void print_push_number(int num);

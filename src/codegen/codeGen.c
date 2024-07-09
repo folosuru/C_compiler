@@ -66,6 +66,13 @@ void calc(Node* node_) {
             print_push_number(node->value);
             return;
         }
+        case NODE_STRING_LITERAL: {
+            create_asm_statement_text("lea", 
+                                      create_operand_redister(rax, 8),
+                                      create_operand_text_fmt("[ rip + .Ltext%d ]", node->value) );
+            print_push_register(rax);
+            return;
+        }
         case NODE_LOCALVALUE: {
             if (calc_var_redister_size(node->var_type) >= 4) {
                 //printf("  mov %s, %s PTR  [rbp - %d] # lvar: rvar %s \n", getRedisterName(rax, calc_var_redister_size(node->var_type)), get_size_word_node(node),get_node_offset(node), str_trim(((Local_var*)node->data)->name, ((Local_var*)node->data)->len));
@@ -234,11 +241,6 @@ void calc(Node* node_) {
             while (args_list) {
                 if (args_list->data) {
                     calc((Node*)(args_list->data));
-                    redister_word place_for = get_args_place_for(args_count);
-                    if (place_for != stack) {
-                        print_pop(place_for);
-                    }
-                    args_count--;
                 } 
                 if (args_list->prev != 0) {
                     args_list = args_list->prev;
@@ -246,10 +248,21 @@ void calc(Node* node_) {
                     break;
                 }
             }
+            int counter = 1;
+            while (args_count != 0) {
+                    redister_word place_for = get_args_place_for(counter);
+                    if (place_for != stack) {
+                        print_pop(place_for);
+                    }
+                    counter++;
+                    args_count--;
+            }
+            // printf("  mov al, 0");
+            create_asm_statement_enum(mov, create_operand_redister(rax, 1), create_operand_num(0));
             //printf(" sub rsp, 32\n");
             create_asm_statement_enum(sub, create_operand_redister(rsp, 8), create_operand_num(32));
             //printf("  call %s\n", function_name);
-            create_asm_statement_text("call", create_operand_text_fmt("%s\n", function_name), 0);
+            create_asm_statement_text("call", create_operand_text_fmt("%s", function_name), 0);
             //printf(" add rsp, 32\n");
             create_asm_statement_enum(add, create_operand_redister(rsp, 8), create_operand_num(32));
             un_align_rsp(data->args_cnt);

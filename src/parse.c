@@ -21,7 +21,8 @@ int is_operator(char* string) {
     if (strncmp(string, ">=", 2) == 0 ||
         strncmp(string, "<=", 2) == 0 ||
         strncmp(string, "==", 2) == 0 ||
-        strncmp(string, "!=", 2) == 0 
+        strncmp(string, "!=", 2) == 0 ||
+        strncmp(string, "->", 2) == 0 
         ) {
         return 2;
     }
@@ -29,7 +30,7 @@ int is_operator(char* string) {
         string[0] == '+' || string[0] == '-' || string[0] == '*' || string[0] == '/' || 
         string[0] == '(' || string[0] == ')' || string[0] == ';' || string[0] == '=' ||
         string[0] == '{' || string[0] == '}' || string[0] == ',' || string[0] == '&' ||
-        string[0] == '[' || string[0] == ']' ) {
+        string[0] == '[' || string[0] == ']' || string[0] == '.') {
         return 1;
     }
     return 0;
@@ -72,6 +73,14 @@ int is_preserved_keyword(char* str, Preserved_Word* word) {
         *word = KEYWORD_CHAR;
         return 4;
     }
+    if (keyword_match(str, "void")){
+        *word = KEYWORD_VOID;
+        return 4;
+    }
+    if (keyword_match(str, "struct")){
+        *word = KEYWORD_STRUCT;
+        return 6;
+    }
     
     return 0;
 }
@@ -90,10 +99,66 @@ int get_variable_token(char* now_ptr) {
     return var_length;
 }
 
-Token* tokenize(char* p) {
+struct string_literal_char_info {
+    int source_length;
+    int string_length;
+};
+
+struct string_literal_char_info get_string_literal_1char_length(char* string) {
+    struct string_literal_char_info result;
+    result.source_length = 1;
+    result.string_length = 1;
+    if (*string == '\0' || *string == '"') {
+        result.source_length = 0;
+        result.string_length = 0;
+    }
+    if (*string == '\\') {
+        result.source_length = 2;
+    }
+    return result;
+}
+
+int get_string_literal_length(char** current) {
+    int result = 0;
+    while (true) {
+        struct string_literal_char_info len_data = get_string_literal_1char_length(*current);
+        if (len_data.source_length == 0) {
+            break;
+        }
+        *current = *current + len_data.source_length;
+        result += len_data.string_length;
+    }
+    return result + 1; // \0
+}
+
+char* create_string_literal_text(char** current_char) {
+    char* scanner = *current_char;
+    int text_count = 0;
+    scanner++;
+    while (true) {
+        if (*scanner == '"') {
+            break;
+        }
+        text_count++;
+    }
+    (*current_char)++;
+    char* result = calloc(text_count+1, sizeof(char));
+    int scan_pos = 0;
+    for (int text_count_scan = 0; text_count_scan > text_count; ) {
+        result[text_count_scan] = **current_char;
+        (*current_char)++;
+    }
+    (*current_char)++;
+    return result;
+}
+
+
+struct tokenize_result* tokenize(char* p) {
+    struct tokenize_result* result = calloc(1, sizeof(struct tokenize_result));
     Token first;
     Token* current = &first;
     char* now = p;
+    int text_literal_id = 1;
     while (*now) {
         if (isspace(*now)) {
             now++;
@@ -125,9 +190,31 @@ Token* tokenize(char* p) {
             now = now + var_length;
             continue;
         }
+        if (*now == '"') {
+            char* str_start_pos = now;
+            now++;
+            if (current->type == TOKEN_STRING) {}
+            int literal_source_len = get_string_literal_length(&now);
+            List_iter* text_literal_list =  add_reverse_array_upd(&result->string_literal);
+            string_literal_data* text_literal_data = calloc(1, sizeof(string_literal_data));
+            text_literal_list->data = text_literal_data;
+            text_literal_data->text = str_start_pos;
+            text_literal_data->literal_length = (now - str_start_pos) / sizeof(char);
+            text_literal_data->string_length = literal_source_len;
+            text_literal_data->id = text_literal_id;
+
+            current = create_token(TOKEN_STRING, current, str_start_pos, (now - str_start_pos) / sizeof(char));
+            current->value = text_literal_id;
+            current->data.str_data = text_literal_data;
+
+            text_literal_id++;
+            now++;
+            continue;
+        }
 
         error_at(p, now, "unexpected token");
     }
     create_token(TOKEN_EOF, current,  p +strlen(p),0);
-    return first.next;
+    result->token = first.next;
+    return result;
 }

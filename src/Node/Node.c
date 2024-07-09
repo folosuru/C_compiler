@@ -2,6 +2,7 @@
 #include "../util/array_util.h"
 #include "../error/print_error.h"
 #include "../util/string_util.h"
+#include "../util/dictionary.h"
 Local_var* createLocalVarOffsaet(char* name, int length, Typename* type);
 
 
@@ -64,8 +65,8 @@ Node* get_NodeTree() {
 function_def* working_function;
 void Lvar_offset_calc(List_index* index);
 // function_def*
-List_iter* found_function;
-List_iter* found_global_var;
+dictionary_t found_function;
+dictionary_t found_global_var;
 int calc_arg_offset();
 
 Args_var* createArgsVarOffsaet(char* name, int length, Typename* type, int index) {
@@ -94,13 +95,17 @@ asm_label_def* getFunction() {
         return 0;
     }
     Typename* type;
+
     type = consume_typename(0);
     if (!type) {
         error_token(now_token, "nanikore?");
     }
     Token* name = consume_identify();
     if (!name) {
-        error_token(now_token, "need function name");
+        consume_operator(";");
+        asm_label_def* result = calloc(1, sizeof(asm_label_def));
+        result->nothing = true;
+        return result;
     }
 
     if (consume_operator("(")) {
@@ -141,12 +146,13 @@ asm_label_def* getFunction() {
             }
             working_function->program = getProgram();
             if (working_function->lvar) {
+
                 Lvar_offset_calc(working_function->lvar->index);
             }
         } else {
             consume_operator(";");
         }
-        add_reverse_array_upd(&found_function)->data = working_function;
+        dictionary_add(&found_function, working_function->name, working_function->name_length, working_function);
         asm_label_def* result = calloc(1, sizeof(asm_label_def));
         result->func = working_function;
         return result;
@@ -157,8 +163,7 @@ asm_label_def* getFunction() {
         result->variable->name = str_trim(name->string, name->length);
         result->variable->length = name->length;
         result->variable->type = type;
-        List_iter* list = add_reverse_array_upd(&found_global_var);
-        list->data = result->variable;
+        dictionary_add(&found_global_var, result->variable->name, result->variable->length, result->variable);
         return result;
     }
     return 0;
@@ -185,43 +190,14 @@ Program* getProgram() {
 Node* statement() {
     Node* node;
     if (consume_preserved(KEYWORD_IF)) {
-        node = calloc(1, sizeof(Node));
-        node->data = calloc(1, sizeof(IF_Node_data));
-        IF_Node_data* data = node->data;
-        node->type = NODE_IF;
-        data->condition = assign();
-        data->statement = statement();
-        if (consume_preserved(KEYWORD_ELSE)) {
-            data->else_statement = statement();
-        }
-        return node;
+        return if_node();
     } else if (consume_preserved(KEYWORD_FOR)) {
-        node = calloc(1, sizeof(Node));
-        node->type = NODE_FOR;
-        node->data = calloc(1, sizeof(FOR_Node_data));
-        FOR_Node_data* data = node->data;
-        if (!consume_operator("(")) {
-            error_token(now_token->next, "need (");
-        }
-        if (!consume_operator(";")) {
-            data->init = assign_or_declaration();
-            consume_operator(";");
-        }
-        if (!consume_operator(";")) {
-            data->condition = assign();
-            consume_operator(";");
-        }
-        if (!consume_operator(")")) {
-            data->iterate = assign();
-            consume_operator(")");
-        }
-        data->code = statement();
-        return node;
+        return for_node();
     } else if (consume_operator("{")) {
         node = calloc(1, sizeof(Node));
         node->type = NODE_BLOCK;
         node->data = getProgram();
-        return node;
+        return node;   
     } else {
         Typename* type;
         if (consume_preserved(KEYWORD_RETURN)) {
@@ -462,27 +438,11 @@ Args_var* getArgsVarOffset(Token* token) {
 }
 
 Globalvar_def* getGlobalVar(Token* token) {
-    for (List_iter* current = found_global_var; current != 0; current = current->prev) {
-        Globalvar_def* current_var = current->data;
-        if (current_var->length == token->length) {
-            if (memcmp(current_var->name, token->string, current_var->length) == 0) {
-                return current_var;
-            }
-        }
-    }
-    return 0;
+    return dictionary_get(&found_global_var, token->string, token->length);
 }
 
 function_def* find_function(Token* name) {
-    for (List_iter* current = found_function; current != 0; current = current->prev ) {
-        function_def* current_var = current->data;
-        if (current_var->name_length != name->length) continue;
-        if (memcmp(current_var->name, name->string, current_var->name_length) == 0) {
-            return current_var;
-        }
-    }
-
-    return 0;
+    return dictionary_get(&found_function, name->string, name->length);
 }
 
 void function_call_check(Token* function_name, function_def* call_func, int args_count) {
@@ -499,43 +459,86 @@ void function_call_check(Token* function_name, function_def* call_func, int args
 Node* menber_access() {
     Token* current_token = now_token;
     Node* node  = primary();
+    Node* result = node;
     // a[1][2] = (sizeof(*a) * 1) + (sizeof(**a) * 2) + &a; 
     // a[1][2] = *((sizeof(*a) * 1) + (sizeof(**a) * 2) + &a); 
-    if (consume_operator("[")) {
-        Node* variable_ptr = node;
-        Node* result_offset = node;
-        Typename* working_type;
-        if (is_array_ptr(variable_ptr->var_type)) {
-            working_type = variable_ptr->var_type;
+    while (true) {
+        Token* operator_token = now_token;
+        if (consume_operator("[")) {  // 汚くてわけが分からない
+            Node* result_offset = node;
+            Typename* access_to_type = node->var_type;
+            do {
+                if (access_to_type->type != type_ptr) {
+                    error_token(current_token, "this type cannnot access(not pointer, or array)");
+                }
+                access_to_type = access_to_type->ptr_to;
+                Node* add_offset = new_node_plain(NODE_MLU, new_node_num(calc_var_size(access_to_type)), assign(), access_to_type);
+                result_offset = new_node_plain(NODE_ADD, result_offset, add_offset, access_to_type);
+            consume_operator("]");
+            } while (consume_operator("["));
+            result = new_node_plain(NODE_REFER, result_offset,0 , access_to_type);
+        } else if (consume_operator(".")) {
+            result = new_node_plain(NODE_DEREFER, result, 0, create_ptr_to(result->var_type));
+            struct struct_member* member = 0;
+            do {
+                if (result->var_type->ptr_to->type != type_struct) {
+                    error_token(operator_token, "value is not struct type");
+                }
+                Token* target = consume_identify();
+                if (target == 0) {
+                    //
+                }
+                struct struct_define* struct_def = result->var_type->ptr_to->struct_data;
+                member = dictionary_get(struct_def->member, target->string, target->length);
+                if (member == 0) {
+                    error_token(target, "member not found");
+                }
+                result = new_node_plain(NODE_ADD, result , new_node_num(member->offset),  create_ptr_to(member->type));
+            } while (consume_operator("."));
+            result = new_node_plain(NODE_REFER, result, 0, member->type);
+        } else if (consume_operator("->")) {
+            struct struct_member* member = 0;
+            do {
+                if (result->var_type->ptr_to->type != type_struct) {
+                    error_token(operator_token, "value is not struct type");
+                }
+                Token* target = consume_identify();
+                if (target == 0) {
+                    //
+                }
+                struct struct_define* struct_def = result->var_type->ptr_to->struct_data;
+                member = dictionary_get(struct_def->member, target->string, target->length);
+                if (member == 0) {
+                    error_token(target, "member not found");
+                }
+                result = new_node_plain(NODE_ADD, result , new_node_num(member->offset), create_ptr_to(member->type));
+            } while (consume_operator("."));
+            result = new_node_plain(NODE_REFER, result, 0, member->type);
         } else {
-            working_type = variable_ptr->var_type;
+            break;
         }
-        Typename* process_type = calloc(1, sizeof(Typename));
-        do {
-            if (working_type->type != type_ptr) {
-                //
-            }
-            working_type = working_type->ptr_to;
-
-            Node* current_offset_value = assign();
-            result_offset = new_node_plain(NODE_ADD, result_offset, 
-                                            new_node_plain(NODE_MLU, new_node_num(calc_var_size(working_type)), current_offset_value, process_type),
-                                            process_type);
-            process_type->type = working_type->type;
-        consume_operator("]");
-        } while (consume_operator("["));
-        Node* result = new_node_plain(NODE_REFER, result_offset,0 , process_type);
-        return result;
     }
-    return node;
+    return result;
 }
-
 
 
 Node* primary() {
     if (consume_operator("(")) {
         Node *node = assign();
         expect_operator(")");
+        return node;
+    }
+    string_literal_data* string_literal = consume_text_literal();
+    if (string_literal != 0) {
+        Node* node = calloc(1, sizeof(Node));
+        node->type = NODE_STRING_LITERAL;
+        node->value = string_literal->id;
+        node->var_type = calloc(1, sizeof(Typename));
+
+                node->var_type->ptr_to = get_wellknown_type()->char_type;
+                node->var_type->type = type_ptr;
+                node->var_type->array = calloc(1, sizeof(Type_Array_info));
+                node->var_type->array->array_size  = (string_literal->string_length);
         return node;
     }
     Token* variable = consume_identify();
@@ -601,6 +604,7 @@ Node* primary() {
             return node;
         }
 
+
         if (!lvar) {
             error_token(variable, "unknown identify");
         }
@@ -643,6 +647,9 @@ int calc_array_first_offset(Typename* var) {
     if (var->array != 0) {
         return (calc_var_size(var->ptr_to) * (var->array->array_size - 1)) ;
     }
+    if (var->struct_data != 0) {
+        return (calc_var_size(var));
+    }
     return 0;
 }
 
@@ -653,17 +660,17 @@ void Lvar_offset_calc(List_index* index) {
         Local_var* new_var = cur->data;
         if (cur->prev) {
             Local_var* old_var = cur->prev->data;
-            new_var->offset = old_var->offset + old_var->size + calc_array_first_offset(new_var->type);
+            new_var->offset = old_var->offset + old_var->size +  calc_var_size(new_var->type) ;//calc_array_first_offset(new_var->type);
             printf("# %-7.10s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
-                                        new_var->offset - calc_array_first_offset(new_var->type),
-                                        new_var->size + new_var->offset - calc_array_first_offset(new_var->type));
+                                        new_var->offset - calc_var_size(new_var->type),
+                                        new_var->offset);
         } else {
-            new_var->offset = 8 + calc_array_first_offset(new_var->type);
+            new_var->offset = 8 + calc_var_size(new_var->type) /*+ calc_array_first_offset(new_var->type)*/;
             printf("# %-7.20s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
-                                        new_var->offset - calc_array_first_offset(new_var->type),
-                                        new_var->offset + new_var->size - calc_array_first_offset(new_var->type));
+                                        new_var->offset,
+                                        new_var->offset - calc_var_size(new_var->type));
         }
         cur = cur->next;
     }

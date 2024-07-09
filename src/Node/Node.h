@@ -2,6 +2,7 @@
 #define NODE_NODE_H
 #include "../compiler.h"
 #include "../Var_type/var_type.h"
+#include "../error/print_error.h"
 typedef enum {
     NODE_ADD,
     NODE_SUB,
@@ -28,7 +29,9 @@ typedef enum {
     NODE_DEREFER,
     NODE_DO_NOTHING,
     NODE_TYPE_CONVENTION,
-    NODE_GLOBAL_VAR
+    NODE_GLOBAL_VAR,
+    NODE_STRING_LITERAL,
+    // TODO : 変数のポインタを取ってそのオフセットにアクセスするnodeを作って楽をする
 } NodeType;
 /*
      NODE_IF
@@ -82,7 +85,9 @@ typedef enum {
     KEYWORD_WHILE,
     KEYWORD_INT,
     KEYWORD_SIZEOF,
-    KEYWORD_CHAR
+    KEYWORD_CHAR,
+    KEYWORD_VOID,
+    KEYWORD_STRUCT,
 } Preserved_Word;
 
 typedef struct program Program;
@@ -92,13 +97,14 @@ struct program {
 };
 
 Node* get_NodeTree();
-Token* tokenize(char* p);
+
 Program* getProgram();
 bool consume_operator(char* operator);
 bool consume_preserved(Preserved_Word word);
 Token* consume_identify();
 char* consume_variable();
 Typename* consume_typename(Typename* parent);
+string_literal_data* consume_text_literal();
 int except_number();
 void calc(Node* node);
 Node* new_node_num(int val);
@@ -114,6 +120,9 @@ Node* mlu();
 Node* menber_access() ;
 Node* primary();
 Node* unary();
+
+Node* if_node();
+Node* for_node();
 
 Node* type_convention(Node* node, Typename* cast_to);
 
@@ -172,9 +181,12 @@ struct Globalvar_def {
 typedef struct {
     function_def* func;
     Globalvar_def* variable;
+    bool nothing;
 } asm_label_def;
 
 int calc_var_size(Typename*);
 asm_label_def* getFunction();
+
+void struct_define_node();
 
 #endif

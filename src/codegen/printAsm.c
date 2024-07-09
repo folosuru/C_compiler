@@ -93,7 +93,7 @@ void print_mov_redister(redister_word to, redister_word from) {
 
 
 void align_rsp(int after_push_count) {
-    align_value = (((stack_depth + after_push_count)*8 + function_offset_var) % 16);
+    align_value = (function_offset_var % 16) + (((stack_depth + after_push_count) % 2)*8);
     if (align_value != 0) {
         align_value = 16 - align_value;
     }
@@ -219,6 +219,12 @@ void print_global_var_def(Globalvar_def* def) {
     create_asm_statement_directive_fmt("%s:", def->name);
     //printf("  .zero %d\n", calc_var_size(def->type));
     create_asm_statement_directive_fmt("  .zero %d", calc_var_size(def->type));
+}
+
+void print_text_literal_def(string_literal_data* data) {
+    create_asm_statement_directive(".text");
+    create_asm_statement_directive_fmt(".Ltext%d:", data->id);
+    create_asm_statement_directive_fmt("  .string %s", str_trim(data->text, data->literal_length + 1));
 }
 
 void print_args_push(function_def* function) {

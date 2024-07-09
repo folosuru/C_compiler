@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+dictionary_t* defiened_struct_type;
+
 Typename* get_union_type(Typename* p1, Typename* p2) {
     if (p1->type == type_ptr) {
         return p1;
@@ -22,6 +24,9 @@ bool is_type_conflict(Typename* p1,Typename* p2) {
             return false;
         }
         for (;;) {
+            if (p1_cur->type == type_void || p2_cur->type == type_void) {
+                return false;
+            }
             if (p1_cur->type != p2_cur->type) { // int* + int**
                 return true;   
             }
@@ -38,6 +43,9 @@ bool is_type_conflict(Typename* p1,Typename* p2) {
 
 int calc_var_redister_size(Typename* type) {
     switch (type->type){
+        case type_void: {
+            return 1;
+        }
         case type_char: {
             return 1;
         }
@@ -57,6 +65,9 @@ int calc_var_redister_size(Typename* type) {
 }
 int calc_var_size(Typename* type) {
     switch (type->type){
+        case type_void: {
+            return 1;
+        }
         case type_char: {
             return 1;
         }
@@ -69,6 +80,10 @@ int calc_var_size(Typename* type) {
                 return (calc_var_size(type->ptr_to) * type->array->array_size);
             }
             return 8;
+        }
+
+        case type_struct: {
+            return type->struct_data->size;
         }
     
         default:
@@ -106,7 +121,57 @@ well_known_type* get_wellknown_type() {
         wellknown_var->int_type->type = type_int;
         wellknown_var->char_type = calloc(1, sizeof(Typename));
         wellknown_var->char_type->type = type_char;
-
+        wellknown_var->char_type = calloc(1, sizeof(Typename));
+        wellknown_var->char_type->type = type_void;
     }
     return wellknown_var;
+}
+
+
+int calc_var_align_mlutiple(Typename* type) {
+    return calc_var_size(type);
+}
+
+struct struct_define* create_unnamed_struct() {
+    struct struct_define* result = calloc(1, sizeof(struct struct_define));
+    result->member = calloc(1, sizeof(dictionary_t));
+    result->var_type = calloc(1, sizeof(Typename));
+    result->var_type->type = type_struct;
+    result->var_type->struct_data = result;
+
+    return result;
+}
+
+struct struct_define* create_struct_define(char* name, int name_len) {
+    struct struct_define* result = calloc(1, sizeof(struct struct_define));
+    result->name = name;
+    result->name_len = name_len;
+    result->member = calloc(1, sizeof(dictionary_t));
+
+    Typename* type = calloc(1, sizeof(Typename));
+    type->type = type_struct;
+    type->struct_data = result;
+    if (defiened_struct_type == 0) {
+        defiened_struct_type = calloc(1, sizeof(dictionary_t));
+    }
+    result->var_type = type;
+    dictionary_add(defiened_struct_type, name, name_len, type);
+    return result;
+}
+
+void add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type) {
+    struct struct_member* member = calloc(1, sizeof(struct struct_member));
+    member->name = name;
+    member->name_len = name_len;
+    member->type = type;
+    if (dictionary_exist(def->member, name, name_len)) {
+        
+    }
+    dictionary_add(def->member, name, name_len, member);
+    int align_val;
+    if (align_val = def->size % calc_var_align_mlutiple(type) != 0) {
+        def->size += calc_var_align_mlutiple(type) - align_val;
+    }
+    member->offset = def->size;
+    def->size += calc_var_size(type);
 }

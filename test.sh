@@ -3,7 +3,7 @@
 assert_func() {
   expected="$1"
   input="$2"
-  ./build/compiler "$input" > ./test/tmp.s
+  ./build/compiler "$input"  > ./test/tmp.s
   result="$?"
   if [ "$result" != "0" ]; then 
     echo "compile failed: return $result";
@@ -24,7 +24,8 @@ assert() {
 }
 
 
-cmake -S . -B ./build/
+
+cmake -S . -B ./build/ > /dev/null
 cmake --build ./build/
 cmake_result="$?"
 if [ "$cmake_result" != "0" ]; then
@@ -32,8 +33,14 @@ if [ "$cmake_result" != "0" ]; then
   exit 1
 fi
 
-<< TEST_PASS
+assert_func 1 'test/test.c'
+exit
+
 assert 0 '0;'
+assert 0 'return 1+5*8/7 +4;'
+
+assert_func 0 'int printf(char*); int main(){ printf("hello, world!\n"); return 0;}'
+
 assert 42 '42;'
 assert 64 '8*8;'
 assert 11 '8+8-5;'
@@ -90,12 +97,11 @@ assert 5 'int a[8][4]; a[2][3] = 5; return a[2][3];'
 assert_func 3 'int* alloc_args(int arg1, int arg2, int arg3); int main() {int* p = alloc_args(1,2,3); p[2];}'
 assert 3 'int a[2];*a = 1;*(a + 1) = 2;int *p;p = a;return *p + *(p + 1);'
 TEST_PASS
-
+assert 5 'int foo[5];foo[2] = 5; int* p = &(foo[2]);return *p;'
 assert 12 'char a; char b; b = 5; a = 7; return a+b;'
 assert 144 'char a; char b; b = 200; a = 200; return a+b;'
 assert 12 'char a[12]; return sizeof(a);'
 assert 3 'char x[3];x[0] = -1;x[1] = 2;int y;y = 4;return x[0] + y;'
-# assert 5 'int foo[5];foo[2] = 5; int* p = &(foo[2]);return *p;' #todo
 assert_func 5 'int func(int a) {int* ptr = &a; return *ptr;} int main() { return func(5);}'
 assert_func 5 'int foo; int main(){foo = 5; return foo;}'
 assert_func 7 'int foo; int update_var(){ foo = 7; return 0;} int main(){update_var(); return foo;}'
