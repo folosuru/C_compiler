@@ -45,8 +45,8 @@ void error_at(char* source, char* point, char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     struct line_info line = get_line(source, point);
-    fprintf(stderr, " | %s\n", str_trim(line.start, line.end - line.start));
-    fprintf(stderr, " %*s", line.pos, " ");
+    fprintf(stderr, "%4d:%-3d | %s\n", line.number, line.pos, str_trim(line.start, line.end - line.start));
+    fprintf(stderr, " %*s", line.pos + 8, " ");
     fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, "\n");
@@ -59,15 +59,15 @@ void error_token(Token* token, char* msg,  ...) {
     va_start(ap, msg);
 
     struct line_info line = get_line(source, token->string);
-    fprintf(stderr, "at line %d:%d\n", line.number, line.pos);
-    fprintf(stderr, " | %s\n", str_trim(line.start, line.end - line.start));
-    fprintf(stderr, " %*s", line.pos, " ");
+    fprintf(stderr, "At line %d: ", line.number, line.pos);
+    vfprintf(stderr, msg, ap);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "%4d:%-3d | %s\n", line.number, line.pos, str_trim(line.start, line.end - line.start));
+    fprintf(stderr, " %*s", line.pos + 8, " ");
     fprintf(stderr, "^");
     for (int i = 0; i < token->length - 1; i++) {
         fprintf(stderr, "~");
     }
-    fprintf(stderr, "\n%*s", line.pos-1, " ");
-    vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
     exit(1);
 }

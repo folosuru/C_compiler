@@ -95,12 +95,6 @@ asm_label_def* getFunction() {
         return 0;
     }
     Typename* type;
-    if (consume_preserved(KEYWORD_STRUCT)) {
-        struct_define_node();
-        asm_label_def* result = calloc(1, sizeof(asm_label_def));
-        result->nothing = true;
-        return result;
-    }
 
     type = consume_typename(0);
     if (!type) {
@@ -108,7 +102,10 @@ asm_label_def* getFunction() {
     }
     Token* name = consume_identify();
     if (!name) {
-        error_token(now_token, "need function name");
+        consume_operator(";");
+        asm_label_def* result = calloc(1, sizeof(asm_label_def));
+        result->nothing = true;
+        return result;
     }
 
     if (consume_operator("(")) {

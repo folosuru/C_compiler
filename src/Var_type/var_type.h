@@ -20,6 +20,7 @@ struct struct_define {
     int name_len;
     dictionary_t* member;
     int size;
+    Typename* var_type;
 };
 struct Typename{
     typename_type type;
@@ -56,7 +57,7 @@ struct struct_member {
     int name_len;
 };
 
-
+struct struct_define* create_unnamed_struct();
 struct struct_define* create_struct_define(char* name, int name_len);
 void add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type);
 

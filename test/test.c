@@ -66,6 +66,10 @@ struct foo {
 struct foo_foo {
     struct foo f1;
     struct foo* f2;
+    struct {
+        int b;
+        char c;
+    } inside;
 };
 
 int struct_access() {
@@ -95,6 +99,8 @@ int struct_ptr() {
 int more_struct() {
     struct foo_foo v;
     v.f1.a = 7;
+    v.inside.b = 48;
+    v.inside.c = 12;
     return v.f1.a;
 }
 
@@ -102,8 +108,11 @@ struct t1 {
     char* str;
     char* string;
     int len;
-
 };
+
+int f() {
+    return more_struct();
+}
 
 int main() {
     printf("Hello, world!\n");
@@ -128,6 +137,13 @@ int main() {
     test_assert(sizeof(struct foo), 20, "sizeof struct foo");
     test_assert(struct_access(), 42, "struct access");
     test_assert(struct_ptr(), 49, "struct ptr");
+    printf("%d\n",more_struct() );
+
+    printf("%d\n",more_struct() );
+    printf("%d\n",more_struct() );
+    printf("%d\n",more_struct() );
+    printf("%d\n",more_struct() );
+    printf("%d\n",more_struct() );
     test_assert(more_struct(), 7, "struct 2");
     printf("test ok\n");
     return 1;
