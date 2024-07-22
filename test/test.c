@@ -314,5 +314,5 @@ int main() {
 
 
     printf("test ok\n");
-    return 1;
+    return 0;
 }
