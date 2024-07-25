@@ -132,6 +132,16 @@ int calc_var_align_mlutiple(Typename* type) {
     return calc_var_size(type);
 }
 
+struct struct_define* create_unnamed_struct() {
+    struct struct_define* result = calloc(1, sizeof(struct struct_define));
+    result->member = calloc(1, sizeof(dictionary_t));
+    result->var_type = calloc(1, sizeof(Typename));
+    result->var_type->type = type_struct;
+    result->var_type->struct_data = result;
+
+    return result;
+}
+
 struct struct_define* create_struct_define(char* name, int name_len) {
     struct struct_define* result = calloc(1, sizeof(struct struct_define));
     result->name = name;
@@ -144,11 +154,12 @@ struct struct_define* create_struct_define(char* name, int name_len) {
     if (defiened_struct_type == 0) {
         defiened_struct_type = calloc(1, sizeof(dictionary_t));
     }
+    result->var_type = type;
     dictionary_add(defiened_struct_type, name, name_len, type);
     return result;
 }
 
-void add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type) {
+struct struct_member* add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type) {
     struct struct_member* member = calloc(1, sizeof(struct struct_member));
     member->name = name;
     member->name_len = name_len;
@@ -163,4 +174,5 @@ void add_struct_member(struct struct_define* def, char* name, int name_len, Type
     }
     member->offset = def->size;
     def->size += calc_var_size(type);
+    return member;
 }

@@ -33,11 +33,8 @@ if [ "$cmake_result" != "0" ]; then
   exit 1
 fi
 
-assert_func 1 'test/test.c'
+assert_func 0 'test/test.c'
 exit
-
-assert 0 '0;'
-assert 0 'return 1+5*8/7 +4;'
 
 assert_func 0 'int printf(char*); int main(){ printf("hello, world!\n"); return 0;}'
 

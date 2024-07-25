@@ -31,6 +31,7 @@ typedef enum {
     NODE_TYPE_CONVENTION,
     NODE_GLOBAL_VAR,
     NODE_STRING_LITERAL,
+    NODE_STATEMENT
     // TODO : 変数のポインタを取ってそのオフセットにアクセスするnodeを作って楽をする
 } NodeType;
 /*
@@ -188,5 +189,5 @@ int calc_var_size(Typename*);
 asm_label_def* getFunction();
 
 void struct_define_node();
-
+Node* createStatementNode(Node* stm);
 #endif
