@@ -202,7 +202,6 @@ void print_function_def(function_def* function) {
         }
         calc(program->node);
         program = program->next;
-        print_pop(rax);
     }
     //printf("  mov rsp, rbp\n");
     create_asm_statement_enum(mov, create_operand_redister(rsp, 8), create_operand_redister(rbp, 8));

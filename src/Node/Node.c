@@ -46,6 +46,14 @@ Node* new_node(NodeType type, Node* left, Node* right) {
     node->type = type;
   return node;
 }
+
+Node* createStatementNode(Node* stm) {
+    Node *node = calloc(1, sizeof(Node));
+    node->type = NODE_STATEMENT;
+    node->left = stm;
+    return node;
+}
+
 Node* new_node_num(int val) {
   Node *node = calloc(1, sizeof(Node));
   node->type = NODE_NUM;
@@ -231,6 +239,11 @@ Node* statement() {
             } else {
                 node = calloc(1, sizeof(Node));
                 node->type = NODE_DO_NOTHING;
+                if (consume_operator(";")) {
+                    return node;
+                } else {
+                    error_token(now_token, "need ;");
+                }
             }
         } else {
             node = assign();
@@ -238,7 +251,7 @@ Node* statement() {
 
 
         if (consume_operator(";")) {
-            return node;
+            return createStatementNode(node);
         } else {
             error_at(input, now_token->string, "missing ; ");
         }
@@ -660,7 +673,7 @@ void Lvar_offset_calc(List_index* index) {
         Local_var* new_var = cur->data;
         if (cur->prev) {
             Local_var* old_var = cur->prev->data;
-            new_var->offset = old_var->offset + old_var->size +  calc_var_size(new_var->type) ;//calc_array_first_offset(new_var->type);
+            new_var->offset = old_var->offset +  calc_var_size(new_var->type) ;//calc_array_first_offset(new_var->type);
             printf("# %-7.10s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
                                         new_var->offset - calc_var_size(new_var->type),
@@ -669,8 +682,8 @@ void Lvar_offset_calc(List_index* index) {
             new_var->offset = 8 + calc_var_size(new_var->type) /*+ calc_array_first_offset(new_var->type)*/;
             printf("# %-7.20s: size %-2d :%-3d~ %-3d\n", str_trim(new_var->name, new_var->len),
                                         new_var->size,
-                                        new_var->offset,
-                                        new_var->offset - calc_var_size(new_var->type));
+                                        new_var->offset - calc_var_size(new_var->type),
+                                        new_var->offset);
         }
         cur = cur->next;
     }

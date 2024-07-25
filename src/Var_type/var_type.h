@@ -59,6 +59,6 @@ struct struct_member {
 
 struct struct_define* create_unnamed_struct();
 struct struct_define* create_struct_define(char* name, int name_len);
-void add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type);
+struct struct_member* add_struct_member(struct struct_define* def, char* name, int name_len, Typename* type);
 
 #endif

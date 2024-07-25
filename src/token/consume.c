@@ -1,5 +1,5 @@
 #include "../Node/Node.h"
-
+#include "../util/string_util.h"
 Token* consume_identify() {
     if (now_token->type == TOKEN_IDENTIFY) {
         Token* result = now_token;
@@ -68,9 +68,11 @@ Typename* consume_typename(Typename* parent) {
                     return consume_typename(result);
                 } else {  // named struct
                     struct_def = create_struct_define(name->string, name->length);
+                    printf("# struct %s\n", str_trim(name->string, name->length));
                 }
             } else { // unnamed struct
                 struct_def = create_unnamed_struct();
+                printf("# unnamed struct");
             }
             if (!consume_operator("{")) {
                 error_token(now_token, "must be {");
@@ -82,10 +84,11 @@ Typename* consume_typename(Typename* parent) {
                 if (!name) {
                     error_token(now_token, "need field name");
                 }
-                add_struct_member(struct_def, name->string, name->length, type);
+                struct struct_member* member = add_struct_member(struct_def, name->string, name->length, type);
                 if (!consume_operator(";")) {
                     error_token(now_token, "need ;");
                 }
+//                printf("#  %7s | offset: %d\n", str_trim(name->string, name->length), member->offset);
             }
             consume_operator("}");
             return struct_def->var_type;

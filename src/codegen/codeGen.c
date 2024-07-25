@@ -62,6 +62,12 @@ void calc(Node* node_) {
             return ;
         }
 
+        case NODE_STATEMENT: {
+            calc(node->left);
+            print_pop(rax);
+            return;
+        }
+
         case NODE_NUM: {
             print_push_number(node->value);
             return;
