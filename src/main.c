@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "GlobalVariable.h"
 #include "compiler.h"
 #include "Node/Node.h"
 #include "codegen/printAsm.h"
