@@ -164,6 +164,16 @@ struct tokenize_result* tokenize(char* p) {
             now++;
             continue;
         }
+        if (*now == '/' && *(now+1) == '/') {
+            now = now + 2;
+            while (*now != '\n' && *now != '\0') {
+                now++;
+            }
+            if (*now == '\n') {
+                now++;
+            }
+            continue;
+        }
         if (isdigit(*now)) {
             current = create_token(TOKEN_NUM, current, now, 0);
             current->value = strtol(now, &now, 10);
