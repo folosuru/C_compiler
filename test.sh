@@ -23,9 +23,21 @@ assert() {
   assert_func "$1" "int main() {$2}"
 }
 
+run() {
+  input="$1"
+  ./build/compiler "$input"  > ./test/tmp.s
+  result="$?"
+  if [ "$result" != "0" ]; then 
+    echo "compile failed: return $result";
+    exit 1
+  fi
+  cc -o ./test/res ./test/tmp.s ./bin/libfunc.a -static
+  ./test/res
+}
 
 
-cmake -S . -B ./build/ > /dev/null
+
+cmake -S . -B ./build/ 
 cmake --build ./build/
 cmake_result="$?"
 if [ "$cmake_result" != "0" ]; then
@@ -33,5 +45,5 @@ if [ "$cmake_result" != "0" ]; then
   exit 1
 fi
 
-assert_func 0 'test/test.c'
+run 'test/test.c'
 exit 0
